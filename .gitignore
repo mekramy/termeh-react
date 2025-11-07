@@ -1,0 +1,6 @@
+desktop.ini
+npm-debug.log*
+pnpm-debug.log*
+dist/
+dist-ssr/
+node_modules/
