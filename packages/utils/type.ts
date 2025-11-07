@@ -1,13 +1,4 @@
 /**
- * Type-checking utilities and type aliases for simple primitive and compound
- * values used across the project.
- *
- * This module provides lightweight runtime type guards and helper conversions
- * that complement TypeScript's static types. These helpers are defensive and
- * intended to make runtime validation and normalization simple and explicit.
- */
-
-/**
  * Represents a basic, non-object data type used by the application.
  *
  * - Includes `string`, `number`, `boolean`, and `null`.

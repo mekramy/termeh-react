@@ -1,13 +1,4 @@
 /**
- * Number-related utility helpers.
- *
- * This module provides small, defensive helpers for parsing and formatting
- * numeric values from arbitrary inputs (strings that may contain commas,
- * currency symbols, etc.). Functions return sensible fallbacks for invalid
- * inputs (e.g., `NaN` or empty strings).
- */
-
-/**
  * Parses a value into a number, handling strings with commas, spaces, and
  * non-numeric characters.
  *

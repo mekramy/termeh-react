@@ -1,18 +1,3 @@
-/**
- * Utilities for deep-merging partial configuration objects into base
- * configuration objects with configurable per-path strategies.
- *
- * This module provides a stable, immutable `mergeConfig` helper intended for
- * merging user-provided partial configuration into default configuration
- * objects. It supports three merge strategies:
- *
- * - `"merge"`: Deep merge nested plain objects.
- * - `"replace"`: Replace the existing value with the provided value.
- * - `"safe"`: Ignore `undefined` values from the new configuration.
- *
- * Arrays are always replaced (not merged) by design to avoid ambiguous
- * semantics when merging list-like values.
- */
 import { deepClone } from "./common";
 
 /**

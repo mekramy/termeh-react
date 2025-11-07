@@ -1,13 +1,4 @@
 /**
- * DOM-related utility helpers.
- *
- * This module provides small, focused helpers for interacting with the browser
- * DOM environment such as reading meta tag content and copying text to the
- * clipboard. These helpers are defensive: they return sensible fallbacks when
- * running in non-browser environments.
- */
-
-/**
  * Retrieves the `content` attribute of a `<meta>` tag with the given name.
  *
  * - Looks up `meta[name="{name}"]` in the current `document`.

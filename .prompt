@@ -1,1 +1,1 @@
-Write JSDoc comments to all attached files in directory, in English with @param and @return following our project style:
+Write JSDoc comments to all attached files in directory, in English with @param, @returns following our project style

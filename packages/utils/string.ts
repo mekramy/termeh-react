@@ -1,12 +1,4 @@
 /**
- * String utility helpers.
- *
- * Provides small, focused helpers for concatenation, truncation, slugification,
- * and simple value mapping. These functions are defensive and intended for
- * common text manipulation tasks across the project.
- */
-
-/**
  * Concatenates multiple items into a single space-separated string while
  * filtering out nullish, empty, and invalid numeric values.
  *

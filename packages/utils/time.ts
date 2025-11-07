@@ -17,15 +17,6 @@ const DURATION_TRANSLATIONS: Record<string, Record<"en" | "fa", string>> = {
 };
 
 /**
- * Date/time utilities built on top of `moment-jalaali`.
- *
- * This module provides parsing helpers for Gregorian and Jalali dates, RFC3339
- * parsing, simple relative time formatting, and utilities for converting and
- * humanizing durations. Consumers should call `isValid()` on returned Moment
- * objects when validity must be ensured.
- */
-
-/**
  * Parses a standard Gregorian or Jalali date string into a Moment object.
  *
  * - Use `isValid()` on the result to check if parsing succeeded.

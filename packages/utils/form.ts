@@ -1,9 +1,4 @@
 /**
- * Form-related utilities for extracting File objects from various form-like
- * inputs (arrays, FileList, File, FormData).
- */
-
-/**
  * Extracts a single File object from various input types.
  *
  * Supported input shapes:

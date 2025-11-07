@@ -1,10 +1,3 @@
-/**
- * Types used by the masker utilities and components.
- *
- * This module defines the common type aliases and interfaces used to describe
- * mask patterns and options consumed by the Masker component and masking
- * helpers.
- */
 import type { MaskitoMask, MaskitoOptions } from "@maskito/core";
 
 /**
