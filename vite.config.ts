@@ -17,6 +17,7 @@ export default defineConfig({
             entry: {
                 index: resolve(__dirname, "packages/index.ts"),
                 utils: resolve(__dirname, "packages/utils/index.ts"),
+                mask: resolve(__dirname, "packages/mask/index.ts"),
             },
             fileName: (format, entry) => {
                 if (entry === "index") {

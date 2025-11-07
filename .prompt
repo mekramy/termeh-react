@@ -1,8 +1,1 @@
-Write JSDoc comments to all attached files in directory, in English following our project style and this template:
-
-/**
- * Usage or description of function
- *
- * - Use @param for parameters
- * - Use @returns for return values
- */
+Write JSDoc comments to all attached files in directory, in English with @param and @return following our project style:
