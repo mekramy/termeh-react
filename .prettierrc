@@ -3,10 +3,13 @@
     "tabWidth": 4,
     "useTabs": false,
     "trailingComma": "es5",
+    "importOrderSeparation": true,
+    "importOrderSortSpecifiers": true,
     "importOrder": [
         "^react",
-        "^@termeh",
         "^[./]"
     ],
-    "importOrderSortSpecifiers": true
+    "plugins": [
+        "prettier-plugin-jsdoc"
+    ]
 }

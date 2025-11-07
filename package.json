@@ -1,0 +1,79 @@
+{
+    "type": "module",
+    "license": "ISC",
+    "version": "0.0.1",
+    "name": "termeh-react",
+    "description": "A modern React UI component library built on Termeh.",
+    "sideEffects": false,
+    "module": "./dist/index.mjs",
+    "types": "./dist/index.d.ts",
+    "sass": "./dist/style.scss",
+    "style": "./dist/style.scss",
+    "exports": {
+        ".": {
+            "sass": "./dist/style.scss",
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.mjs"
+        },
+        "./package.json": "./package.json"
+    },
+    "files": [
+        "dist"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/mekramy/termeh-react.git"
+    },
+    "author": {
+        "name": "Mojtaba Ekramy",
+        "email": "m.ajamekramy@gmail.com",
+        "url": "https://github.com/mekramy"
+    },
+    "keywords": [
+        "ui",
+        "ui-library",
+        "react-ui",
+        "react-utils",
+        "react-hooks",
+        "react-components"
+    ],
+    "scripts": {
+        "test": "vitest",
+        "build": "vite build",
+        "prepare": "npm run build",
+        "lint": "eslint packages/**/*.{ts,tsx} --fix",
+        "demo": "vite --config vite.config.ts demo"
+    },
+    "devDependencies": {
+        "@types/moment-jalaali": "^0.7.9",
+        "@types/node": "^24.10.0",
+        "@types/react": "^19.2.2",
+        "@types/react-dom": "^19.2.2",
+        "@vitejs/plugin-react": "^5.1.0",
+        "babel-plugin-react-compiler": "^1.0.0",
+        "eslint": "^9.39.1",
+        "eslint-plugin-react": "^7.37.5",
+        "eslint-plugin-react-hooks": "^7.0.1",
+        "globals": "^16.5.0",
+        "prettier": "^3.6.2",
+        "prettier-plugin-jsdoc": "^1.5.0",
+        "typescript": "^5.9.3",
+        "typescript-eslint": "^8.46.3",
+        "vite": "^7.2.2",
+        "vite-plugin-dts": "^4.5.4",
+        "vite-plugin-static-copy": "^3.1.4",
+        "vitest": "^4.0.8"
+    },
+    "peerDependencies": {
+        "@maskito/core": "^4.0.0",
+        "@maskito/kit": "^4.0.0",
+        "@maskito/react": "^4.0.0",
+        "moment-jalaali": "^0.10.4",
+        "motion": "^12.23.24",
+        "nanoid": "^5.1.6",
+        "react": "^19.2.0",
+        "react-dom": "^19.2.0",
+        "termeh": "^1.0.1",
+        "yup": "^1.7.1"
+    }
+}

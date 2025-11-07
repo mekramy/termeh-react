@@ -1,15 +1,19 @@
 import js from "@eslint/js";
 import tsPlugin from "@typescript-eslint/eslint-plugin";
-import jsxA11y from "eslint-plugin-jsx-a11y";
 import reactPlugin from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
-import reactRefresh from "eslint-plugin-react-refresh";
 import { defineConfig, globalIgnores } from "eslint/config";
 import globals from "globals";
 
 export default defineConfig([
     // Global ignores
-    globalIgnores(["dist", "node_modules", "*.d.ts"]),
+    globalIgnores([
+        "dist",
+        "node_modules",
+        "*.d.ts",
+        "coverage",
+        "*.config.js",
+    ]),
 
     // TypeScript + React
     {
@@ -22,44 +26,40 @@ export default defineConfig([
                 ecmaFeatures: { jsx: true },
                 project: ["./tsconfig.json"],
             },
-            globals: globals.browser,
+            globals: {
+                ...globals.browser,
+                React: "readonly",
+                JSX: "readonly",
+            },
         },
         plugins: {
             "@typescript-eslint": tsPlugin,
             react: reactPlugin,
             "react-hooks": reactHooks,
-            "jsx-a11y": jsxA11y,
-            "react-refresh": reactRefresh,
         },
         extends: [
             js.configs.recommended,
             "plugin:@typescript-eslint/recommended",
             "plugin:react/recommended",
             "plugin:react-hooks/recommended",
-            "plugin:jsx-a11y/recommended",
         ],
         settings: {
-            react: {
-                version: "detect",
-            },
+            react: { version: "detect" },
         },
         rules: {
-            // General
             "no-console": ["warn", { allow: ["warn", "error"] }],
-            "no-debugger": "warn",
 
-            // React
+            // === React ===
             "react/react-in-jsx-scope": "off",
             "react/prop-types": "off",
             "react/jsx-key": "error",
-            "react/jsx-no-useless-fragment": "warn",
-            "react/jsx-pascal-case": "warn",
+            "react/jsx-no-duplicate-props": "error",
 
-            // React Hooks
+            // === Hooks ===
             "react-hooks/rules-of-hooks": "error",
             "react-hooks/exhaustive-deps": "warn",
 
-            // TypeScript
+            // === TypeScript ===
             "@typescript-eslint/no-unused-vars": [
                 "warn",
                 {
@@ -71,37 +71,34 @@ export default defineConfig([
             "@typescript-eslint/no-explicit-any": "warn",
             "@typescript-eslint/consistent-type-imports": [
                 "warn",
-                { prefer: "type-imports" },
+                {
+                    prefer: "type-imports",
+                    fixStyle: "inline-type-imports",
+                },
             ],
-            "@typescript-eslint/consistent-type-definitions": [
+
+            // === Code Quality ===
+            "@typescript-eslint/no-floating-promises": "warn",
+            "@typescript-eslint/await-thenable": "warn",
+            "@typescript-eslint/no-unnecessary-condition": "warn",
+
+            // === Comments ===
+            "lines-around-comment": [
                 "warn",
-                "interface",
+                {
+                    beforeLineComment: true,
+                    beforeBlockComment: true,
+                    allowBlockStart: true,
+                    allowObjectStart: true,
+                    allowArrayStart: true,
+                },
             ],
-
-            // Accessibility - کمی انعطاف برای کتابخانه
-            "jsx-a11y/no-autofocus": "off",
-            "jsx-a11y/no-noninteractive-element-interactions": "off",
         },
     },
 
-    // JavaScript files
+    // Global files
     {
-        files: ["**/*.{js,jsx}"],
-        languageOptions: {
-            ecmaVersion: "latest",
-            sourceType: "module",
-            ecmaFeatures: { jsx: true },
-            globals: globals.browser,
-        },
-        extends: [js.configs.recommended],
-        rules: {
-            "no-console": "off",
-        },
-    },
-
-    // Config & demo files
-    {
-        files: ["**/*.config.*", "demo/**", "scripts/**", "test/**"],
+        files: ["**/*.{js,jsx,mjs,cjs,json}"],
         languageOptions: {
             ecmaVersion: "latest",
             sourceType: "module",
@@ -109,7 +106,6 @@ export default defineConfig([
         },
         rules: {
             "no-console": "off",
-            "@typescript-eslint/no-require-imports": "off",
         },
     },
 ]);
