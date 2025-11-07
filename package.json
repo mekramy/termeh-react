@@ -15,6 +15,10 @@
             "types": "./dist/index.d.ts",
             "import": "./dist/index.mjs"
         },
+        "./utils": {
+            "types": "./dist/utils/index.d.ts",
+            "import": "./dist/utils/index.mjs"
+        },
         "./package.json": "./package.json"
     },
     "files": [

@@ -16,6 +16,7 @@ export default defineConfig({
             name: "TermehReact",
             entry: {
                 index: resolve(__dirname, "packages/index.ts"),
+                utils: resolve(__dirname, "packages/utils/index.ts"),
             },
             fileName: (format, entry) => {
                 if (entry === "index") {
