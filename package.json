@@ -23,6 +23,10 @@
             "types": "./dist/mask/index.d.ts",
             "import": "./dist/mask/index.mjs"
         },
+        "./form": {
+            "types": "./dist/form/index.d.ts",
+            "import": "./dist/form/index.mjs"
+        },
         "./package.json": "./package.json"
     },
     "files": [

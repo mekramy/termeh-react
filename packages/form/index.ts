@@ -1,0 +1,1 @@
+export { extendYup } from "./install";
