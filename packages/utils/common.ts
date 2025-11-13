@@ -45,7 +45,7 @@ export function nullish<T>(v: T | null | undefined, alt: T): T {
  * @returns The original value `v` when truthy; otherwise `alt`.
  */
 export function alter<T>(v: T, alt: T): T {
-    return (v as any) || alt;
+    return (v as T) || alt;
 }
 
 /**
@@ -58,35 +58,6 @@ export function alter<T>(v: T, alt: T): T {
  * @param v - The value to convert into an array.
  * @returns The array when `v` is an array, otherwise an empty array.
  */
-export function toArray<T>(v: any): T[] {
+export function toArray<T>(v: unknown): T[] {
     return Array.isArray(v) ? Array.from<T>(v) : [];
-}
-
-/**
- * Deeply clones supported values including plain objects, arrays, Dates, Maps,
- * and Sets. Primitive values are returned as-is.
- *
- * - This implementation is intentionally simple and intended for common
- *   configuration objects or data structures. It is not optimized for highly
- *   complex graphs or objects with custom prototypes / circular references.
- *
- * @template T
- * @param obj - The value to clone.
- * @returns A deep clone of the provided value.
- */
-export function deepClone<T>(obj: T): T {
-    if (obj === null || typeof obj !== "object") return obj;
-
-    if (obj instanceof Date) return new Date(obj.getTime()) as any;
-    if (obj instanceof Map) return new Map(Array.from(obj.entries())) as any;
-    if (obj instanceof Set) return new Set(Array.from(obj.values())) as any;
-    if (Array.isArray(obj)) return obj.map(deepClone) as any;
-
-    const cloned: any = {};
-    for (const key in obj) {
-        if (Object.prototype.hasOwnProperty.call(obj, key)) {
-            cloned[key] = deepClone((obj as any)[key]);
-        }
-    }
-    return cloned;
 }

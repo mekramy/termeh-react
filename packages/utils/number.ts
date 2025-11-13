@@ -31,7 +31,7 @@ export function parseNumber(v: unknown): number {
  */
 export function extractNumeric(v: unknown): string {
     if (v == null) return "";
-    return String(v).match(/\d/g)?.join("") || "";
+    return String(v).match(/\d/g)?.join("") ?? "";
 }
 
 /**

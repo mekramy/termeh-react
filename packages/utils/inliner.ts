@@ -214,7 +214,7 @@ export class Inliner {
  * @returns The escaped string safe for HTML insertion.
  */
 function escape(s: string): string {
-    return s.replace(/[&<>"'`=\/]/g, (ch) => {
+    return s.replace(/[&<>"'`=/]/g, (ch) => {
         switch (ch) {
             case "&":
                 return "&amp;";

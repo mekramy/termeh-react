@@ -4,6 +4,7 @@ export * from "./form";
 export * from "./inliner";
 export * from "./merge";
 export * from "./number";
+export * from "./object";
 export * from "./string";
 export * from "./time";
 export * from "./type";

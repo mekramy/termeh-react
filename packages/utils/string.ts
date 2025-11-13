@@ -37,7 +37,7 @@ export function concat(...items: unknown[]): string {
  */
 export function truncate(v: string, length: number): string {
     if (length <= 0) return "";
-    return v.length <= length ? v : v.slice(0, length) + "...";
+    return v.length <= length ? v : `${v.slice(0, length)}...`;
 }
 
 /**

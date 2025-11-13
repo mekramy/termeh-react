@@ -31,7 +31,7 @@ export function getFormFile(v: unknown): File | undefined {
         file = undefined;
     }
 
-    return file || undefined;
+    return file ?? undefined;
 }
 
 /**

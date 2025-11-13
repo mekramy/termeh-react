@@ -1,4 +1,4 @@
-import { deepClone } from "./common";
+import { deepClone } from "./object";
 
 /**
  * Defines the strategy for merging values at a specific configuration path.
@@ -52,12 +52,12 @@ export type DeepPartial<T> = {
  *   replace arrays, and ignore `undefined` values on non-object paths.
  * @returns A new configuration object containing the merged result.
  */
-export function mergeConfig<T extends Record<string, any>>(
+export function mergeConfig<T extends Record<string, unknown>>(
     config: T,
     newConfig: DeepPartial<T>,
     options?: MergeOptions
 ): T {
-    const strategies = options || {};
+    const strategies = options ?? {};
 
     /**
      * Internal recursive function that merges properties from `source` into
@@ -105,11 +105,7 @@ export function mergeConfig<T extends Record<string, any>>(
             }
 
             // Default ignore for undefined primitive values when no explicit strategy
-            if (
-                strategy === undefined &&
-                typeof sourceValue !== "object" &&
-                sourceValue === undefined
-            ) {
+            if (typeof sourceValue !== "object" && sourceValue === undefined) {
                 continue;
             }
 

@@ -7,6 +7,7 @@ moment.loadPersian({ dialect: "persian-modern" });
 export const RFC3339 = "YYYY-MM-DDTHH:mm:ssZ";
 
 // Translation map for humanized duration
+type TimeUnit = "years" | "months" | "days" | "hours" | "minutes" | "seconds";
 const DURATION_TRANSLATIONS: Record<string, Record<"en" | "fa", string>> = {
     years: { en: "years", fa: "سال" },
     months: { en: "months", fa: "ماه" },
@@ -130,10 +131,10 @@ export function toHMS(
  */
 function translateDuration(
     value: number,
-    unit: string,
+    unit: TimeUnit,
     locale: "en" | "fa"
 ): string {
-    const translation = DURATION_TRANSLATIONS[unit]?.[locale] ?? unit;
+    const translation = DURATION_TRANSLATIONS[unit][locale];
     return `${value} ${translation}`;
 }
 
@@ -171,7 +172,7 @@ export function humanize(
 
     for (const { value, unit } of units) {
         if (value !== 0) {
-            parts.push(translateDuration(value, unit, locale));
+            parts.push(translateDuration(value, unit as TimeUnit, locale));
         }
     }
 
