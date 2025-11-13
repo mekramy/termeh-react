@@ -43,6 +43,7 @@ export default defineConfig({
         dts({
             insertTypesEntry: true,
             copyDtsFiles: true,
+            include: ["packages"],
         }),
         viteStaticCopy({
             targets: [{ src: "./packages/style.scss", dest: "." }],
