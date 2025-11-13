@@ -1,8 +1,11 @@
 import type { MaskitoMask, MaskitoOptions } from "@maskito/core";
 
 /**
- * Maps custom string tokens to RegExp patterns. Used for defining custom
- * masking patterns. Example: `{ "#": /[0-9]/ }`.
+ * A mapping of custom token characters to their RegExp patterns.
+ *
+ * Used to define reusable placeholders within mask pattern strings. For
+ * example, `{ "#": /[0-9]/ }` defines that "#" represents a single digit when
+ * used in a pattern string.
  */
 export type TokenMap = Record<string, RegExp>;
 
@@ -10,8 +13,11 @@ export type TokenMap = Record<string, RegExp>;
  * A mask definition which may be provided as a simple string pattern or as a
  * `MaskitoMask` (the array/structure accepted by Maskito).
  *
- * Example usage:
+ * String patterns use token characters (e.g., "#" for digits) which are
+ * resolved using a TokenMap. Array patterns directly specify RegExp patterns
+ * and literals.
  *
+ * @example
  *     const stringPattern: Definition = "###-##-####";
  *     const maskitoPattern: Definition = [
  *         /\d/,
@@ -30,19 +36,32 @@ export type TokenMap = Record<string, RegExp>;
 export type Definition = string | MaskitoMask;
 
 /**
- * Configuration for mask usage. Either supply an explicit `mask` pattern or a
- * full `options` object compatible with Maskito. When both are provided the
- * `mask` will be resolved and merged into the resulting Maskito options.
+ * Configuration object for creating a masked input with optional advanced
+ * settings.
+ *
+ * Allows specifying either a simple `mask` pattern (string or MaskitoMask) or
+ * full Maskito `options` for more control. When both are provided, the `mask`
+ * is resolved and merged into the options.
  *
  * @example
  *     const m: MaskOption = {
  *         mask: "###-###",
- *         options: {}, // maskito options placeholder
+ *     };
+ *     const advanced: MaskOption = {
+ *         mask: "###-###",
+ *         options: { overwrite: true },
  *     };
  */
 export interface MaskOption {
-    /** Optional Maskito-specific options for advanced/custom behavior. */
+    /**
+     * Optional Maskito-specific options for advanced behavior like custom
+     * overwrite mode or input transformation.
+     */
     options?: MaskitoOptions;
-    /** Optional pattern definition (string or MaskitoMask) for simple masks. */
+
+    /**
+     * Optional pattern definition (string or MaskitoMask). String patterns use
+     * token characters which are resolved using a TokenMap.
+     */
     mask?: Definition;
 }

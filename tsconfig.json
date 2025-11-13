@@ -20,6 +20,13 @@
         "verbatimModuleSyntax": true,
         "types": ["vite/client"]
     },
-    "include": ["packages/**/*.ts", "packages/**/*.tsx", "packages/**/*.d.ts"],
+    "include": [
+        "packages/**/*.ts",
+        "packages/**/*.tsx",
+        "packages/**/*.d.ts",
+        "demo/**/*.ts",
+        "demo/**/*.tsx",
+        "demo/**/*.d.ts"
+    ],
     "exclude": ["dist", "node_modules"]
 }

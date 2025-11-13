@@ -29,7 +29,7 @@ export function isValidIranianIBAN(iban?: string): boolean {
     // Ensure it starts with "IR" prefix for validation algorithm
     if (!iban.startsWith("IR")) {
         // Prepend the ISO country code 'IR' so we have the standard form
-        iban = "IR" + iban;
+        iban = `IR${iban}`;
     }
 
     // Expect: IR + 24 digits (total length 26)

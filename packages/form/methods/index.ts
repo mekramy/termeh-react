@@ -13,6 +13,12 @@ export * from "./irPhone";
 export * from "./irPostalCode";
 export * from "./username";
 
+/**
+ * Union type representing all available extra validation method names.
+ *
+ * Use with `extendYup()` to selectively register additional validation methods
+ * on Yup schemas.
+ */
 export type ExtraMethods =
     | "alnum"
     | "alnumfa"
