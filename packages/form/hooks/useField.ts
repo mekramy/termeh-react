@@ -7,6 +7,8 @@ import {
     useTransition,
 } from "react";
 import { ValidationError, type Schema } from "yup";
+import { useMasker } from "../../mask";
+import type { MaskOption } from "../../mask/types";
 import { newId } from "../../utils";
 import type { ErrorQuery, FormContext } from "../types";
 import { resolveYupDefault } from "../utils";
@@ -17,6 +19,9 @@ import { resolveYupDefault } from "../utils";
  * @template T - The field value type.
  */
 interface FieldOptions<T = unknown> {
+    /** Mask configuration object or `null` to disable masking. */
+    mask: MaskOption;
+
     /** The initial value for the field. Defaults to the schema's default value. */
     initial: T;
 
@@ -69,6 +74,7 @@ interface FieldOptions<T = unknown> {
  * @returns An object containing:
  *
  *   - `id`: The unique field identifier (for DOM element lookup).
+ *   - `ref`: Ref callback for binding to input element.
  *   - `value`: The current field value.
  *   - `isTouched`: Whether the field has been interacted with.
  *   - `errors`: Array of error messages for the field.
@@ -86,6 +92,7 @@ export function useField<T = unknown>(
     // Options
     const { name: form, errors: _errors, fields: fields } = ctx;
     const {
+        mask,
         initial = resolveYupDefault(schema),
         debounce = 0,
         trigger = "change",
@@ -96,6 +103,7 @@ export function useField<T = unknown>(
     } = options;
 
     // Stats
+    const ref = useMasker(mask ?? null);
     const [, startTransition] = useTransition();
     const timerRef = useRef<number | null>(null);
     const abortRef = useRef<AbortController | null>(null);
@@ -204,7 +212,7 @@ export function useField<T = unknown>(
         [fields, _errors, name]
     );
 
-    const onChange = useCallback(
+    const setValue = useCallback(
         (value: T) => {
             fields.setValue(name, value);
 
@@ -215,17 +223,37 @@ export function useField<T = unknown>(
         [fields, name, trigger, validate]
     );
 
+    const onChange = useCallback(
+        (e: React.ChangeEvent<HTMLInputElement>) => {
+            setValue(e.target.value as T);
+        },
+        [setValue]
+    );
+
     return useMemo(
         () => ({
             id,
+            ref,
             value,
             isTouched,
             errors,
             isValid,
             isFailed,
             reset,
+            setValue,
             onChange,
         }),
-        [id, value, isTouched, errors, isValid, isFailed, reset, onChange]
+        [
+            id,
+            ref,
+            value,
+            isTouched,
+            errors,
+            isValid,
+            isFailed,
+            reset,
+            setValue,
+            onChange,
+        ]
     );
 }
