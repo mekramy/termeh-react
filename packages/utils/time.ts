@@ -108,15 +108,10 @@ export function toHMS(
             totalSeconds = Math.floor(absDuration);
     }
 
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
-
-    return {
-        hours: Math.abs(hours),
-        minutes: Math.abs(minutes),
-        seconds: Math.abs(seconds),
-    };
+    const hours = Math.max(0, Math.floor(totalSeconds / 3600));
+    const minutes = Math.max(0, Math.floor((totalSeconds % 3600) / 60));
+    const seconds = Math.max(0, totalSeconds % 60);
+    return { hours, minutes, seconds };
 }
 
 /**
