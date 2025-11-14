@@ -17,6 +17,8 @@
  *   `fallback` value when not present.
  */
 export function getMetaContent(name: string, fallback: string = ""): string {
+    if (typeof document === "undefined") return "";
+
     return (
         document
             .querySelector(`meta[name="${name}"]`)
@@ -45,10 +47,7 @@ export function getMetaContent(name: string, fallback: string = ""): string {
  */
 export async function copyToClipboard(data: string): Promise<void> {
     return new Promise((resolve, reject) => {
-        if (!navigator?.clipboard?.writeText) {
-            reject(new Error("Clipboard API not supported"));
-            return;
-        }
+        if (typeof navigator === "undefined") return;
 
         navigator.clipboard
             .writeText(data)

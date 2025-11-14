@@ -133,7 +133,7 @@ export function useForm(
 
     // Scroll to first error after validation
     useEffect(() => {
-        if (scrollPending) {
+        if (scrollPending && typeof document !== "undefined") {
             requestAnimationFrame(() => {
                 for (const [name, field] of fields.getFields()) {
                     const el =

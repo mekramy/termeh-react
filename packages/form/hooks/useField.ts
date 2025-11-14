@@ -7,6 +7,7 @@ import {
     useTransition,
 } from "react";
 import { ValidationError, type Schema } from "yup";
+import { useDebounceCallback } from "../../hooks";
 import { useMasker } from "../../mask";
 import type { MaskOption } from "../../mask/types";
 import { newId } from "../../utils";
@@ -102,12 +103,6 @@ export function useField<T = unknown>(
         serializeFormData,
     } = options;
 
-    // Stats
-    const ref = useMasker(mask ?? null);
-    const [, startTransition] = useTransition();
-    const timerRef = useRef<number | null>(null);
-    const abortRef = useRef<AbortController | null>(null);
-
     // Subscribe to field and error stores
     const fieldSnap = useSyncExternalStore(
         (fn) => fields.subscribe(name, fn),
@@ -119,6 +114,42 @@ export function useField<T = unknown>(
         () => _errors.getSnapshot(name, query),
         () => _errors.getSnapshot(name, query)
     );
+
+    // Stats
+    const ref = useMasker(mask ?? null);
+    const [, startTransition] = useTransition();
+    const abortRef = useRef<AbortController | null>(null);
+    useDebounceCallback(fieldSnap?.value as T, debounce || 300, (v) => {
+        if (trigger !== "change" || !fieldSnap?.touched) return;
+
+        // Abort previous validation
+        abortRef.current?.abort();
+        const ctl = new AbortController();
+        abortRef.current = ctl;
+
+        // Validation function
+        startTransition(async () => {
+            try {
+                const parsed = parse ? parse(v) : v;
+                await schema.validate(parsed, {
+                    strict: false,
+                    abortEarly: false,
+                    stripUnknown: true,
+                });
+
+                if (ctl.signal.aborted) return;
+                _errors.clear(name);
+            } catch (e) {
+                if (ctl.signal.aborted) return;
+
+                if (e instanceof ValidationError) {
+                    _errors.parseField(name, e);
+                } else {
+                    _errors.clear(name);
+                }
+            }
+        });
+    });
 
     // Register field
     useEffect(() => {
@@ -134,52 +165,8 @@ export function useField<T = unknown>(
             serializeFormData,
         });
 
-        return () => {
-            if (timerRef.current) clearTimeout(timerRef.current);
-            abortRef.current?.abort();
-        };
+        return () => abortRef.current?.abort();
     }, []);
-
-    // Helpers
-    const validate = useCallback(
-        (value: T) => {
-            // Abort previous validation
-            abortRef.current?.abort();
-            const ctl = new AbortController();
-            abortRef.current = ctl;
-
-            // Validation function
-            const runValidation = async () => {
-                try {
-                    const parsed = parse ? parse(value) : value;
-                    await schema.validate(parsed, {
-                        strict: false,
-                        abortEarly: false,
-                        stripUnknown: true,
-                    });
-
-                    if (ctl.signal.aborted) return;
-                    _errors.clear(name);
-                } catch (e) {
-                    if (ctl.signal.aborted) return;
-
-                    if (e instanceof ValidationError) {
-                        _errors.parseField(name, e);
-                    } else {
-                        _errors.clear(name);
-                    }
-                }
-            };
-
-            // Run timer
-            if (timerRef.current) clearTimeout(timerRef.current);
-            timerRef.current = window.setTimeout(
-                runValidation,
-                debounce || 300
-            );
-        },
-        [_errors, name, schema, parse, debounce]
-    );
 
     // Derived state
     const id = fieldSnap?.id;
@@ -215,12 +202,8 @@ export function useField<T = unknown>(
     const setValue = useCallback(
         (value: T) => {
             fields.setValue(name, value);
-
-            if (trigger === "change") {
-                startTransition(() => validate(value));
-            }
         },
-        [fields, name, trigger, validate]
+        [fields, name]
     );
 
     const onChange = useCallback(
