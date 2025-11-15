@@ -10,23 +10,6 @@ import { toHMS } from "../utils";
  * format and controlling timer state. The hook automatically cleans up
  * intervals on unmount.
  *
- * @example
- *     ```tsx
- *     const countdown = useCountdown();
- *
- *     useEffect(() => {
- *         countdown.start(60); // Start 60-second countdown
- *     }, []);
- *
- *     return (
- *         <div>
- *             <p>Time: {countdown.timer}</p>
- *             <button onClick={() => countdown.pause()}>Pause</button>
- *             <button onClick={() => countdown.stop()}>Stop</button>
- *         </div>
- *     );
- *     ```;
- *
  * @returns An object containing:
  *
  *   - `hours`: The hours component of the remaining time.
@@ -44,43 +27,46 @@ import { toHMS } from "../utils";
  */
 export function useCountdown() {
     // Stats
-    const [value, setValue] = useState(0);
-    const [isRunning, setIsRunning] = useState(false);
     const intervalRef = useRef<number | null>(null);
+    const [isRunning, setIsRunning] = useState(false);
+    const [milliseconds, setMilliseconds] = useState(0);
 
     // Computed value
-    const isAlive = value > 0;
-    const isPaused = value > 0 && !isRunning;
-    const isActive = value > 0 && isRunning;
-    const parts = toHMS(value || 0, "seconds");
-    const hours = parts.hours;
-    const minutes = parts.minutes;
-    const seconds = parts.seconds;
-    const timer = value
-        ? [
-              parts.hours > 0 ? parts.hours.toString().padStart(2, "0") : "",
-              parts.minutes.toString().padStart(2, "0"),
-              parts.seconds.toString().padStart(2, "0"),
-          ]
-              .filter(Boolean)
-              .join(":")
-        : "00:00";
+    const isAlive = milliseconds > 0;
+    const isActive = milliseconds > 0 && isRunning;
+    const isPaused = milliseconds > 0 && !isRunning;
+    const { hours, minutes, seconds } = toHMS(milliseconds, "milliseconds");
+    const timer =
+        milliseconds > 0
+            ? [
+                  hours > 0 ? hours.toString().padStart(2, "0") : "",
+                  minutes.toString().padStart(2, "0"),
+                  seconds.toString().padStart(2, "0"),
+              ]
+                  .filter(Boolean)
+                  .join(":")
+            : "00:00";
 
     // Helpers
+    const unsetInterval = () => {
+        if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+        }
+    };
     const run = useCallback(() => {
         if (intervalRef.current) return;
 
         setIsRunning(true);
         intervalRef.current = setInterval(() => {
-            setValue((prev) => {
-                if (prev <= 1) {
-                    if (intervalRef.current) clearInterval(intervalRef.current);
-                    intervalRef.current = null;
+            setMilliseconds((prev) => {
+                if (prev <= 1000) {
+                    unsetInterval();
                     setIsRunning(false);
                     return 0;
                 }
 
-                return prev - 1;
+                return prev - 1000;
             });
         }, 1000);
     }, []);
@@ -89,49 +75,39 @@ export function useCountdown() {
     const start = useCallback(
         (duration: number, unit: "seconds" | "milliseconds" = "seconds") => {
             // Stop Current
-            if (intervalRef.current) clearInterval(intervalRef.current);
-            intervalRef.current = null;
+            unsetInterval();
 
             // Skip on invalid
             duration = Math.abs(duration);
             if (!Number.isFinite(duration) || duration <= 0) {
-                setValue(0);
                 setIsRunning(false);
+                setMilliseconds(0);
                 return;
             }
 
-            setValue(
-                unit === "seconds" ? duration : Math.floor(duration / 1000)
-            );
+            setMilliseconds(unit === "seconds" ? duration * 1000 : duration);
             run();
         },
         [run]
     );
 
     const stop = useCallback(() => {
-        if (intervalRef.current) clearInterval(intervalRef.current);
-        intervalRef.current = null;
-        setValue(0);
+        unsetInterval();
         setIsRunning(false);
+        setMilliseconds(0);
     }, []);
 
     const pause = useCallback(() => {
-        if (intervalRef.current) clearInterval(intervalRef.current);
-        intervalRef.current = null;
+        unsetInterval();
         setIsRunning(false);
     }, []);
 
     const resume = useCallback(() => {
-        if (value > 0 && !intervalRef.current) run();
-    }, [value, run]);
+        if (milliseconds > 0) run();
+    }, [milliseconds, run]);
 
     // Cleanup on unmount
-    useEffect(
-        () => () => {
-            if (intervalRef.current) clearInterval(intervalRef.current);
-        },
-        []
-    );
+    useEffect(() => unsetInterval, []);
 
     return useMemo(
         () => ({
