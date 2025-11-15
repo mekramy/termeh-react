@@ -17,6 +17,7 @@ export default defineConfig({
             entry: {
                 index: resolve(__dirname, "packages/index.ts"),
                 utils: resolve(__dirname, "packages/utils/index.ts"),
+                signer: resolve(__dirname, "packages/signer/index.ts"),
                 hooks: resolve(__dirname, "packages/hooks/index.ts"),
                 mq: resolve(__dirname, "packages/mq/index.ts"),
                 mask: resolve(__dirname, "packages/mask/index.ts"),

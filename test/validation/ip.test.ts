@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isValidIP } from "../../packages/validation/methods";
+import { isValidIP } from "../../packages/form/methods";
 
 describe("isValidIP", () => {
     it("returns true for valid IPv4", () => {

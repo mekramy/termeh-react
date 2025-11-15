@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isAlphaNumeric } from "../../packages/validation/methods";
+import { isAlphaNumeric } from "../../packages/form/methods";
 
 describe("isAlphaNumeric", () => {
     it("returns true for alphanumeric strings", () => {

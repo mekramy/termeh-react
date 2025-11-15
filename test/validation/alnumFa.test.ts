@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isAlphaNumericWithPersian } from "../../packages/validation/methods";
+import { isAlphaNumericWithPersian } from "../../packages/form/methods";
 
 describe("isAlphaNumericWithPersian", () => {
     it("returns true for English, Persian, and numbers", () => {

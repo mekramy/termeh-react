@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isValidIranianPhone } from "../../packages/validation/methods";
+import { isValidIranianPhone } from "../../packages/form/methods";
 
 describe("isValidIranianPhone", () => {
     it("returns true for valid Iranian phone numbers", () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isValidUsername } from "../../packages/validation/methods";
+import { isValidUsername } from "../../packages/form/methods";
 
 describe("isValidUsername", () => {
     it("returns true for valid usernames", () => {

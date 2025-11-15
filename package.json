@@ -19,6 +19,10 @@
             "types": "./dist/utils/index.d.ts",
             "import": "./dist/utils/index.mjs"
         },
+        "./signer": {
+            "types": "./dist/signer/index.d.ts",
+            "import": "./dist/signer/index.mjs"
+        },
         "./hooks": {
             "types": "./dist/hooks/index.d.ts",
             "import": "./dist/hooks/index.mjs"

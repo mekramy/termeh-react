@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isValidFileSize } from "../../packages/validation/methods";
+import { isValidFileSize } from "../../packages/form/methods";
 
 describe("isValidFileSize", () => {
     function makeFile(size: number): File {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isValidIranianNationalCode } from "../../packages/validation/methods";
+import { isValidIranianNationalCode } from "../../packages/form/methods";
 
 describe("isValidIranianNationalCode", () => {
     it("returns true for valid national codes", () => {

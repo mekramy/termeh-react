@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isValidIranianBankCard } from "../../packages/validation/methods";
+import { isValidIranianBankCard } from "../../packages/form/methods";
 
 describe("isValidIranianBankCard", () => {
     it("returns true for valid Iranian bank card numbers", () => {

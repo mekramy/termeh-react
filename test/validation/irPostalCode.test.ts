@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isValidIranianPostalCode } from "../../packages/validation/methods";
+import { isValidIranianPostalCode } from "../../packages/form/methods";
 
 describe("isValidIranianPostalCode", () => {
     it("returns true for valid postal codes", () => {

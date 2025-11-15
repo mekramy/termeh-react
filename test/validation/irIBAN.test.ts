@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isValidIranianIBAN } from "../../packages/validation/methods";
+import { isValidIranianIBAN } from "../../packages/form/methods";
 
 describe("isValidIranianIBAN", () => {
     it("returns true for valid IBANs", () => {

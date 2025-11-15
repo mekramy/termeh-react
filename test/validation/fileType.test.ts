@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isValidFileType } from "../../packages/validation/methods";
+import { isValidFileType } from "../../packages/form/methods";
 
 describe("isValidFileType", () => {
     function makeFile(type: string): File {
