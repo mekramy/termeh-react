@@ -6,6 +6,7 @@ export * from "./useDebounce";
 export * from "./useDebounceCallback";
 export * from "./useDeepMemo";
 export * from "./useRefCallback";
+export * from "./useScrollState";
 export * from "./useShortcut";
 export * from "./useStorage";
 export * from "./useTimer";
