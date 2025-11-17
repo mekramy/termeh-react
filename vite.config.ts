@@ -22,6 +22,7 @@ export default defineConfig({
                 mq: resolve(__dirname, "packages/mq/index.ts"),
                 mask: resolve(__dirname, "packages/mask/index.ts"),
                 form: resolve(__dirname, "packages/form/index.ts"),
+                lister: resolve(__dirname, "packages/lister/index.ts"),
             },
             fileName: (format, entry) => {
                 if (entry === "index") {

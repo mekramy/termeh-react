@@ -39,6 +39,10 @@
             "types": "./dist/form/index.d.ts",
             "import": "./dist/form/index.mjs"
         },
+        "./lister": {
+            "types": "./dist/lister/index.d.ts",
+            "import": "./dist/lister/index.mjs"
+        },
         "./package.json": "./package.json"
     },
     "files": [
