@@ -296,6 +296,26 @@ export function useLister<TRecord = unknown, TMeta = unknown>(
                 const isSame = await validate(next, statsRef.current.sign);
                 if (isSame) return;
 
+                // Parse Metadata
+                const meta: Record<string, unknown> = {};
+                for (const [key, value] of Object.entries(response)) {
+                    if (
+                        ![
+                            "page",
+                            "limit",
+                            "search",
+                            "sorts",
+                            "total",
+                            "pages",
+                            "from",
+                            "to",
+                            "data",
+                        ].includes(key)
+                    ) {
+                        meta[key] = value;
+                    }
+                }
+
                 // Update stats
                 const signature = await sign(next);
                 persistStats((prev) => {
@@ -306,9 +326,9 @@ export function useLister<TRecord = unknown, TMeta = unknown>(
                         pages: positiveSafe(response.pages, 0)!,
                         from: positiveSafe(response.from, 0)!,
                         to: positiveSafe(response.to, 0)!,
-                        meta: objectSafe<TMeta>(response.meta, {} as TMeta)!,
+                        meta: meta as TMeta,
                         records: arraySafe<TRecord>(
-                            response.records,
+                            response.data,
                             [] as TRecord[]
                         )!,
                         sign: signature,
