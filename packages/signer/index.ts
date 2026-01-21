@@ -1,4 +1,4 @@
-import { flatten } from "./utils";
+import { createKey } from "../utils";
 
 /**
  * Generates a SHA-256 checksum for an object.
@@ -7,7 +7,7 @@ import { flatten } from "./utils";
  * @returns Hexadecimal checksum string.
  */
 export async function sign(data: unknown): Promise<string> {
-    const flatted = flatten(data).join("|");
+    const flatted = createKey(Array.isArray(data) ? data : [data]);
     const encoder = new TextEncoder();
     const encodedData = encoder.encode(flatted);
     const hashBuffer = await crypto.subtle.digest("SHA-256", encodedData);

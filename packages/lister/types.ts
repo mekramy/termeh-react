@@ -27,8 +27,8 @@ export type Callback = (params: ListerParams, encoded: string) => void;
 
 /** Configuration options for the lister. */
 export interface ListerOptions {
-    /** Storage key namespace */
-    name: string;
+    /** Storage key */
+    key: unknown[];
     /** Callback triggered after any parameter update */
     callback: Callback;
     /** Default initial parameters */

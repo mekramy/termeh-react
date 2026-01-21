@@ -2,6 +2,7 @@ export * from "./common";
 export * from "./dom";
 export * from "./form";
 export * from "./inliner";
+export * from "./key";
 export * from "./merge";
 export * from "./number";
 export * from "./object";

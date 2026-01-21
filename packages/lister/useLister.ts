@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useStorage } from "../hooks";
 import { sign, validate } from "../signer";
-import { isObject } from "../utils";
+import { createKey, isObject } from "../utils";
 import type {
     Callback,
     ListerData,
@@ -35,7 +35,7 @@ import {
  * @example
  *     const { page, limit, search, filters, records, apply, parseResponse } =
  *         useLister<{ id: number; name: string }, { totalCount: number }>({
- *             name: "users",
+ *             key: ["users"],
  *             defaults: { page: 1, limit: 20 },
  *             callback: (params, encoded) => console.log(params, encoded),
  *         });
@@ -49,7 +49,7 @@ import {
  * @template TRecord - Type of individual records in the list.
  * @template TMeta - Type of metadata object for the list.
  * @param options - Optional configuration object:
- * @param options.name - Key prefix for localStorage persistence.
+ * @param options.key - Key prefix for localStorage persistence.
  * @param options.defaults - Default values for `page`, `limit`, `search`,
  *   `sorts`, and `filters`.
  * @param options.callback - Function called whenever filters are applied;
@@ -75,7 +75,7 @@ export function useLister<TRecord = unknown, TMeta = unknown>(
 ) {
     // Options
     const {
-        name = "",
+        key = [],
         defaults = {},
         callback = null,
         rememberLimit = true,
@@ -83,7 +83,11 @@ export function useLister<TRecord = unknown, TMeta = unknown>(
     } = options;
 
     // Storage
-    const storage = useStorage(localStorage, `${name} lister`);
+    const storageKey = createKey(key, "-");
+    const storage = useStorage(
+        localStorage,
+        storageKey ? `${storageKey} lister` : ""
+    );
 
     // Initializer
     const initial = (): ListerData<TRecord, TMeta> => {
@@ -98,9 +102,9 @@ export function useLister<TRecord = unknown, TMeta = unknown>(
             filters: {},
             ...removeZero(defaults),
             ...removeZero({
-                limit: rememberLimit ? storedLimit : undefined,
+                limit: rememberLimit && storageKey ? storedLimit : undefined,
                 sorts:
-                    rememberSorts && storedSorts.length
+                    rememberSorts && storageKey && storedSorts.length
                         ? storedSorts
                         : undefined,
             }),
@@ -154,19 +158,19 @@ export function useLister<TRecord = unknown, TMeta = unknown>(
             const limit = positiveSafe(next.limit, 0)!;
             const sorts = arraySafe(next.sorts, [])!;
 
-            if (rememberLimit && limit > 0) {
+            if (rememberLimit && storageKey && limit > 0) {
                 storage.set("limit", String(limit));
             } else {
                 storage.remove("limit");
             }
 
-            if (rememberSorts && sorts.length > 0) {
+            if (rememberSorts && storageKey && sorts.length > 0) {
                 storage.set("sorts", encodeSorts(sorts));
             } else {
                 storage.remove("sorts");
             }
         },
-        [rememberLimit, rememberSorts, storage]
+        [storageKey, rememberLimit, rememberSorts, storage]
     );
 
     // APIs
