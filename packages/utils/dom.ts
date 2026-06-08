@@ -55,3 +55,18 @@ export async function copyToClipboard(data: string): Promise<void> {
             .catch((e) => reject(e));
     });
 }
+
+/**
+ * Combines multiple class names into a single string, filtering out any falsy
+ * values.
+ *
+ * @param classes - An array of class names, which may include falsy values
+ *   (e.g., `undefined`, `null`, `false`, `""`). Falsy values will be filtered
+ *   out.
+ * @returns A single string of space-separated class names, excluding any falsy
+ *   values. For example, `classNames("btn", undefined, "active", false,
+ *   "primary")` would return `"btn active primary"`.
+ */
+export function classNames<T = unknown>(...classes: T[]): string {
+    return classes.filter(Boolean).join(" ");
+}
