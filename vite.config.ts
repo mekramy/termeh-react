@@ -23,6 +23,7 @@ export default defineConfig({
                 mask: resolve(__dirname, "packages/mask/index.ts"),
                 form: resolve(__dirname, "packages/form/index.ts"),
                 lister: resolve(__dirname, "packages/lister/index.ts"),
+                toast: resolve(__dirname, "packages/toast/index.ts"),
             },
             fileName: (format, entry) => {
                 if (entry === "index") {
@@ -49,7 +50,10 @@ export default defineConfig({
             include: ["packages"],
         }),
         viteStaticCopy({
-            targets: [{ src: "./packages/style.scss", dest: "." }],
+            targets: [
+                { src: "./packages/style.scss", dest: "." },
+                { src: "./packages/toast/styles", dest: "./toast" },
+            ],
         }),
     ],
 });

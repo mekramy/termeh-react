@@ -1,0 +1,280 @@
+@use "sass:color";
+@use "termeh";
+
+@mixin use($colors: null) {
+    $colors: termeh.list-safe($colors, "use-toast", "colors", ());
+
+    $fallback-radius: termeh.var("radius", "normal");
+
+    $decorator: termeh.var("decorator", "size", 2px);
+    $gap-micro: termeh.var("gap", "micro", 8px);
+    $gap-macro: termeh.var("gap", "macro", 1.6rem);
+    $line-height: termeh.var("line-height", "normal", 1.6em);
+    $strong-weight: termeh.var("strong", "weight", bold);
+
+    $background: termeh.var("toast", "background", #090e23);
+    $foreground: termeh.var("toast", "foreground", white);
+    $shadow: termeh.var("toast", "shadow", none);
+    $backdrop-filter: termeh.var("toast", "backdrop-filter", none);
+
+    $radius: termeh.var("toast", "radius", $fallback-radius);
+    $progress-size: termeh.var("toast", "progress-size", $decorator);
+
+    $primary: termeh.color("primary");
+    $primary-readable: color.mix($foreground, $primary, 50%);
+    $primary-foreground: termeh.variant("primary", "foreground");
+
+    @at-root {
+        .tt-dimmer {
+            .tt-item {
+                display: block;
+                max-width: 100%;
+                position: relative;
+                box-sizing: border-box;
+
+                .toast {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: stretch;
+                    overflow: visible;
+                    position: relative;
+                    box-sizing: border-box;
+                    border-radius: $radius;
+                    color: $foreground;
+                    background: $background;
+                    box-shadow: $shadow;
+                    backdrop-filter: $backdrop-filter;
+                    transform-origin: center;
+                    @include termeh.transition(all);
+
+                    > .toast-wrapper {
+                        display: flex;
+                        flex-direction: row;
+                        align-items: flex-start;
+                        gap: 1em;
+                        padding: 1em $gap-macro;
+                        @include termeh.transition(all);
+
+                        > .toast-icon {
+                            flex: none;
+                            display: inline-flex;
+                            align-items: center;
+                            justify-content: center;
+                            vertical-align: middle;
+                            width: 1em;
+                            height: $line-height;
+                            color: $primary-readable;
+
+                            .icon {
+                                width: 1em;
+                                height: 1em;
+                            }
+                        }
+
+                        > .toast-content {
+                            flex: 1;
+                            @include termeh.transition(all);
+
+                            h1,
+                            h2,
+                            h3,
+                            h4,
+                            h5,
+                            h6 {
+                                font-size: 1em;
+                                font-weight: $strong-weight;
+                                line-height: $line-height;
+                                @include termeh.marged() {
+                                    margin-bottom: $gap-micro;
+                                }
+                            }
+
+                            p {
+                                text-align: justify;
+                                line-height: $line-height;
+                                @include termeh.marginless();
+                            }
+                        }
+                    }
+
+                    > .toast-actions {
+                        display: flex;
+                        flex-direction: row;
+                        align-items: center;
+                        justify-content: flex-end;
+                        gap: $gap-micro;
+                        padding: 1em $gap-macro;
+                        @include termeh.transition(all);
+
+                        .action {
+                            @include termeh.control();
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            position: relative;
+                            cursor: pointer;
+                            text-align: center;
+                            width: auto;
+                            white-space: nowrap;
+                            text-decoration: none;
+                            border-radius: $radius;
+                            text-overflow: ellipsis;
+                            padding: termeh.inline-padding();
+                            @include termeh.transition(all);
+                            @include termeh.unselectable();
+
+                            &:hover {
+                                text-decoration: none;
+                                transform: scale(1.05);
+                            }
+
+                            &:not(.is-secondary) {
+                                color: $primary-foreground;
+                                background-color: rgba($primary, 0.65);
+
+                                &:hover {
+                                    background-color: $primary;
+                                }
+                            }
+
+                            &.is-secondary {
+                                &:hover {
+                                    background-color: rgba($foreground, 0.1);
+                                }
+                            }
+                        }
+                    }
+
+                    > .toast-progress {
+                        display: block;
+                        height: $progress-size;
+                        background-color: $primary-readable;
+                        will-change: width;
+                        transition-property: width;
+                        transition-timing-function: linear;
+                    }
+
+                    &.is-loading {
+                        @include termeh.loader(
+                            $line-height,
+                            $primary,
+                            $decorator
+                        );
+
+                        > * {
+                            opacity: 0;
+                        }
+                    }
+
+                    &.is-closable {
+                        cursor: help;
+
+                        &:hover {
+                            transform: scale(1.05) !important;
+                        }
+                    }
+
+                    @each $name, $color in termeh.colors($colors) {
+                        $-readable: color.mix($foreground, $color, 50%);
+                        $-foreground: termeh.variant($name, "foreground");
+
+                        &.is-#{$name} {
+                            @include termeh.selection($name);
+
+                            > .toast-wrapper > .toast-icon {
+                                color: $-readable;
+                            }
+
+                            > .toast-actions .action:not(.is-secondary) {
+                                color: $-foreground;
+                                background-color: rgba($color, 0.65);
+
+                                &:hover {
+                                    background-color: $color;
+                                }
+                            }
+
+                            > .toast-progress {
+                                background-color: $-readable;
+                            }
+
+                            &.is-loading {
+                                @include termeh.loader-color($color);
+                            }
+                        }
+                    }
+                }
+
+                &:not(.is-active) {
+                    position: absolute;
+                    width: 100%;
+                    top: 0;
+                    bottom: 0;
+                    transform-origin: bottom center;
+
+                    > .tt-item-wrapper {
+                        inset: 0;
+                        overflow: hidden;
+                        position: absolute;
+                        transform-origin: bottom center;
+
+                        display: flex;
+                        flex-direction: column;
+                        align-items: stretch;
+                        justify-content: flex-end;
+
+                        .toast {
+                            overflow: hidden;
+
+                            > * {
+                                opacity: 0;
+                            }
+                        }
+                    }
+                }
+            }
+
+            &.is-stacked .tt-item {
+                &.is-active {
+                    .toast {
+                        > .toast-actions {
+                            .action {
+                                color: transparent;
+                                background: color.mix(
+                                    $background,
+                                    $primary,
+                                    85%
+                                );
+
+                                &.is-secondary {
+                                    color: transparent;
+                                    background: color.mix(
+                                        $background,
+                                        $foreground,
+                                        95%
+                                    );
+                                }
+                            }
+                        }
+
+                        @each $name, $color in termeh.colors($colors) {
+                            $-readable: color.mix($foreground, $color, 50%);
+                            $-foreground: termeh.variant($name, "foreground");
+
+                            &.is-#{$name} {
+                                > .toast-actions .action:not(.is-secondary) {
+                                    color: transparent;
+                                    background: color.mix(
+                                        $background,
+                                        $color,
+                                        85%
+                                    );
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

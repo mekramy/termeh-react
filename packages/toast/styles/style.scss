@@ -1,0 +1,13 @@
+@use "sass:color";
+@use "termeh";
+@use "./dimmer";
+@use "./toast";
+
+@mixin use-toast($colors: null) {
+    @if not termeh.module-presented("toast") {
+        @include termeh.require("toast", "icon");
+        @include dimmer.use();
+        @include toast.use($colors);
+        @include termeh.present-module("toast");
+    }
+}

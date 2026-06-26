@@ -1,0 +1,203 @@
+@use "sass:color";
+@use "termeh";
+
+@mixin use() {
+    $fallback-overlay-background: termeh.var("overlay", "background");
+    $fallback-overlay-opacity: termeh.var("overlay", "opacity", 1);
+    $fallback-overlay-filter: termeh.var("overlay", "filter", none);
+    $fallback-radius: termeh.var("radius", "normal");
+
+    $width: termeh.var("toast", "width", 25rem);
+    $z-index: termeh.var("z-index", "toast", 100);
+    $gap-micro: termeh.var("gap", "micro", 8px);
+    $gap-macro: termeh.var("gap", "macro", 1.6rem);
+    $line-height: termeh.var("line-height", "normal", 1.6em);
+
+    $overlay-opacity: termeh.var(
+        "toast",
+        "overlay-opacity",
+        $fallback-overlay-opacity
+    );
+    $overlay-background: rgba(
+        termeh.var("toast", "overlay-background", $fallback-overlay-background),
+        $overlay-opacity
+    );
+    $overlay-filter: termeh.var(
+        "toast",
+        "overlay-filter",
+        $fallback-overlay-filter
+    );
+
+    $radius: termeh.var("toast", "radius", $fallback-radius);
+    $background: termeh.var("toast", "background", #090e23);
+    $foreground: termeh.var("toast", "foreground", white);
+    $shadow: termeh.var("toast", "shadow", none);
+
+    $action: color.mix($foreground, termeh.color("primary"), 50%);
+    $clear: color.mix($foreground, termeh.color("error"), 65%);
+    $clear-active: color.mix($foreground, termeh.color("error"), 40%);
+
+    @at-root {
+        .tt-dimmer {
+            display: flex;
+            align-items: stretch;
+            flex-direction: column;
+            box-sizing: border-box;
+            gap: $gap-micro;
+            position: fixed;
+            overflow: visible;
+            width: $width;
+            max-width: 100vw;
+            max-height: 100vh;
+            padding: $gap-macro;
+            z-index: $z-index;
+            @include termeh.transition(all);
+
+            @include termeh.is-ltr() {
+                top: 0;
+                right: 0;
+                bottom: auto;
+                left: auto;
+            }
+
+            @include termeh.is-rtl() {
+                top: 0;
+                left: 0;
+                bottom: auto;
+                right: auto;
+            }
+
+            > .tt-actions {
+                display: flex;
+                flex-direction: row;
+                justify-content: flex-end;
+                margin-bottom: $gap-micro;
+                transform-origin: top center;
+                @include termeh.transition(all);
+
+                .actions-wrapper {
+                    display: flex;
+                    align-items: center;
+                    font-size: 0.9em;
+                    gap: $gap-micro;
+                    border-radius: $radius;
+                    padding: termeh.inline-padding();
+                    background: rgba($background, 0.9);
+                    box-shadow: $shadow;
+
+                    > .action {
+                        display: flex;
+                        cursor: pointer;
+                        font-weight: 500;
+                        color: $clear;
+                        padding: 0 termeh.half($gap-micro);
+                        @include termeh.transition(all);
+
+                        &:hover {
+                            color: $clear-active;
+                            transform: scale(1.05);
+                        }
+                    }
+
+                    > .icon-action {
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        cursor: pointer;
+                        color: $foreground;
+                        padding: termeh.half($gap-micro);
+                        @include termeh.transition(all);
+
+                        > .icon {
+                            width: 1em;
+                            height: 1em;
+                        }
+
+                        &:hover {
+                            color: $action;
+                            transform: scale(1.25);
+                        }
+                    }
+                }
+            }
+
+            > .tt-container {
+                display: flex;
+                flex-direction: column-reverse;
+                align-items: stretch;
+                gap: $gap-micro;
+                position: relative;
+                box-sizing: border-box;
+                @include termeh.transition(all);
+            }
+
+            > .tt-collapser {
+                display: none;
+                position: absolute;
+                inset: 0;
+                cursor: pointer;
+            }
+
+            &.is-stacked {
+                > .tt-container {
+                    gap: 0;
+                    margin-top: -1rem;
+                }
+
+                > .tt-collapser {
+                    display: block;
+                }
+
+                &:hover {
+                    transform: scale(1.05);
+                }
+            }
+
+            &.is-empty {
+                display: none;
+            }
+
+            @include termeh.mobile() {
+                top: 0;
+                left: 0;
+                bottom: 0;
+                right: 0;
+                width: 100vw;
+                height: 100vh;
+                overflow: hidden;
+                overflow-y: auto;
+                background: $overlay-background;
+                backdrop-filter: $overlay-filter;
+
+                &.is-stacked {
+                    top: 0;
+                    left: 0;
+                    bottom: auto;
+                    right: auto;
+                    height: auto;
+                    overflow-x: visible;
+                    overflow-y: visible;
+                    background: none;
+                    backdrop-filter: none;
+                }
+
+                &:not(.is-stacked) {
+                    > .tt-actions {
+                        $negate: termeh.negate($gap-macro);
+                        justify-content: stretch;
+                        position: sticky;
+                        top: 0;
+                        z-index: 99999;
+
+                        .actions-wrapper {
+                            flex: 1;
+                            padding: 1em $gap-macro;
+                            margin: $negate $negate 0;
+                            justify-content: space-between;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

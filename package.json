@@ -43,6 +43,10 @@
             "types": "./dist/lister/index.d.ts",
             "import": "./dist/lister/index.mjs"
         },
+        "./toast": {
+            "types": "./dist/toast/index.d.ts",
+            "import": "./dist/toast/index.mjs"
+        },
         "./package.json": "./package.json"
     },
     "files": [
