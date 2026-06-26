@@ -14,13 +14,8 @@ import { CloseIcon } from "../internal/CloseIcon";
 import { ProviderContext, ToastContext } from "../internal/context";
 import { getDefaults } from "../internal/defaults";
 import { createToastStore } from "../internal/store";
-import type {
-    Animations,
-    Provider,
-    ProviderOptions,
-    Stage,
-    Toast,
-} from "../types";
+import type { Toast } from "../toast";
+import type { Animations, Provider, ProviderOptions, Stage } from "../types";
 
 type ToastProviderProps = PropsWithChildren<HTMLAttributes<HTMLDivElement>> & {
     closeIcon?: ReactNode;

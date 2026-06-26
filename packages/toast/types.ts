@@ -1,5 +1,5 @@
 import type { Variant } from "motion";
-import type { ReactElement } from "react";
+import type { Toast } from "./toast";
 
 /** Toast display mode: default mode or sticky (persistent) mode. */
 export type Mode = "default" | "sticky";
@@ -110,33 +110,6 @@ export interface ProviderOptions {
 
     /** Animation variants for provider action bar */
     actionBarAnimations: ActionBarAnimation | undefined;
-}
-
-/**
- * Toast instance data. Represents a single toast message with its state,
- * content, and configuration.
- */
-export interface Toast {
-    /** Unique identifier for the toast */
-    id: string;
-
-    /** Display mode: default or sticky */
-    mode: Mode;
-
-    /** Current visibility state */
-    state: State;
-
-    /** Current animation stage */
-    stage: Stage;
-
-    /** Toast configuration and event handlers */
-    options: Options;
-
-    /** React element to render as toast content */
-    element: ReactElement;
-
-    /** The reason the toast was closed, or null if still open */
-    closeMode: CloseMode | null;
 }
 
 /**

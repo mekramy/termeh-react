@@ -1,4 +1,5 @@
-import type { Callback, CloseMode, Stage, State, Store, Toast } from "../types";
+import type { Toast } from "../toast";
+import type { Callback, CloseMode, Stage, State, Store } from "../types";
 
 /**
  * Factory function to create a toast store, which manages the state of toasts
@@ -12,14 +13,12 @@ export function createToastStore(): Store {
     let snapshot = { isStacked: stacked, toasts: items };
 
     // Helpers
-    const isLeaving = (toast: Toast) =>
-        ["leave", "leaveStack"].includes(toast.stage);
     const scheduleRemove = (id: string, closeMode: CloseMode) => {
         const toast = items.get(id);
-        if (!toast || isLeaving(toast)) return;
+        if (!toast || toast.isLeaving) return;
 
         const next = new Map(items);
-        if (toast.stage === "hidden") {
+        if (toast.isHidden) {
             next.delete(id);
             items = normalize(next);
             snapshot = { isStacked: stacked, toasts: items };
@@ -27,11 +26,13 @@ export function createToastStore(): Store {
 
             toast.options.onClose?.(closeMode);
         } else {
-            next.set(id, {
-                ...toast,
-                stage: stacked ? "leaveStack" : "leave",
-                closeMode,
-            });
+            next.set(
+                id,
+                toast.clone({
+                    stage: stacked ? "leaveStack" : "leave",
+                    closeMode,
+                })
+            );
             items = next;
             snapshot = { isStacked: stacked, toasts: items };
             notify();
@@ -43,7 +44,7 @@ export function createToastStore(): Store {
         const next = new Map(base);
 
         entries.forEach(([id, toast], index) => {
-            if (isLeaving(toast)) return;
+            if (toast.isLeaving) return;
 
             let state: State;
             if (stacked) {
@@ -68,7 +69,7 @@ export function createToastStore(): Store {
             }
 
             if (toast.state !== state || toast.stage !== stage) {
-                next.set(id, { ...toast, state, stage });
+                next.set(id, toast.clone({ state, stage }));
             }
         });
 
@@ -123,9 +124,7 @@ export function createToastStore(): Store {
 
     const clear = () => {
         Array.from(items.entries())
-            .filter(
-                ([_, toast]) => toast.mode !== "sticky" && !isLeaving(toast)
-            )
+            .filter(([_, toast]) => toast.mode !== "sticky" && !toast.isLeaving)
             .forEach(([id, _], index) => {
                 setTimeout(() => {
                     scheduleRemove(id, "manual");

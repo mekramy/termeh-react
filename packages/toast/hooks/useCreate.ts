@@ -27,7 +27,15 @@ export function useCreate() {
     const [progress, setProgress] = useState(0);
 
     // Computed
-    const isAlive = !["idle", "leave", "leaveStack"].includes(toast.state);
+    const isAlive = !toast.isIdle && !toast.isLeaving;
+    const stateClasses = classNames(
+        `is-${toast.state}`,
+        paused && "is-paused",
+        loading && "is-loading",
+        toast.isSticky && "is-sticky",
+        toast.isClosable && "is-closable",
+        toast.isAutoClosing && "is-auto-closing"
+    );
 
     // Handlers
     const scheduleClose = useEvent((mode: CloseMode) => {
@@ -87,12 +95,7 @@ export function useCreate() {
 
     // Lifecycle
     useEffect(() => {
-        if (
-            typeof window !== "undefined" &&
-            toast.mode !== "sticky" &&
-            toast.options.duration &&
-            toast.options.duration > 0
-        ) {
+        if (typeof window !== "undefined" && toast.isAutoClosing) {
             intervalRef.current = setInterval(onTick, 10);
         }
 
@@ -110,12 +113,12 @@ export function useCreate() {
     }, [loading, isAlive, scheduleClose]);
 
     const pause = useCallback(() => {
-        if (isAlive && toast.mode !== "sticky") setPaused(true);
-    }, [isAlive, toast.mode]);
+        if (isAlive && toast.isAutoClosing) setPaused(true);
+    }, [isAlive, toast.isAutoClosing]);
 
     const resume = useCallback(() => {
-        if (isAlive && toast.mode !== "sticky") setPaused(false);
-    }, [isAlive, toast.mode]);
+        if (isAlive && toast.isAutoClosing) setPaused(false);
+    }, [isAlive, toast.isAutoClosing]);
 
     const action = useCallback(
         (key: string, data?: unknown) => {
@@ -144,23 +147,10 @@ export function useCreate() {
             id: toast.id,
             mode: toast.mode,
             state: toast.state,
-            duration: toast.options.duration,
-            closable: toast.options.closable,
-            isSticky: toast.mode === "sticky",
-            isClosable:
-                toast.mode !== "sticky" &&
-                toast.options.duration &&
-                toast.options.duration > 0,
-            stateClasses: classNames(
-                `is-${toast.state}`,
-                toast.mode === "sticky" && "is-sticky",
-                toast.mode !== "sticky" &&
-                    toast.options.duration &&
-                    toast.options.duration > 0 &&
-                    "is-closable",
-                paused && "is-paused",
-                loading && "is-loading"
-            ),
+            isSticky: toast.isSticky,
+            isClosable: toast.isClosable,
+            isAutoClosing: toast.isAutoClosing,
+            stateClasses,
             paused,
             loading,
             progress,
@@ -174,8 +164,10 @@ export function useCreate() {
             toast.id,
             toast.mode,
             toast.state,
-            toast.options.duration,
-            toast.options.closable,
+            toast.isSticky,
+            toast.isClosable,
+            toast.isAutoClosing,
+            stateClasses,
             paused,
             loading,
             progress,
