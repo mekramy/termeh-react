@@ -40,10 +40,10 @@ export class Toast {
     constructor(props: Props) {
         this.id = props.id;
         this.mode = props.mode;
-        this.state = props.state;
-        this.stage = props.stage;
         this.options = props.options;
         this.element = props.element;
+        this.state = props.state;
+        this.stage = props.stage;
         this.closeMode = props.closeMode;
     }
 

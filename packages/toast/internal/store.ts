@@ -59,7 +59,7 @@ export function createToastStore(): Store {
             let stage: Stage;
             if (stacked) {
                 if (index === count - 1)
-                    stage = toast.stage === "idle" ? "enterStack" : "active";
+                    stage = toast.isIdle ? "enterStack" : "active";
                 else if (index === count - 2) stage = "secondary";
                 else if (index === count - 3) stage = "tertiary";
                 else stage = "hidden";
