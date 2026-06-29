@@ -1,3 +1,4 @@
+export * from "./components/BaseToast";
 export * from "./components/Simple";
 export * from "./hooks/useCreate";
 export * from "./hooks/useToast";

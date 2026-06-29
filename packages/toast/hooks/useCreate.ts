@@ -34,6 +34,7 @@ export function useCreate() {
         loading && "is-loading",
         toast.isSticky && "is-sticky",
         toast.isClosable && "is-closable",
+        toast.isClickable && "is-clickable",
         toast.isAutoClosing && "is-auto-closing"
     );
 
@@ -67,8 +68,6 @@ export function useCreate() {
                     if (result) scheduleClose("click");
                 })
                 .catch(() => setLoading(false));
-        } else if (toast.options.closable) {
-            scheduleClose("click");
         }
     });
 
@@ -149,10 +148,11 @@ export function useCreate() {
             state: toast.state,
             isSticky: toast.isSticky,
             isClosable: toast.isClosable,
+            isClickable: toast.isClickable,
             isAutoClosing: toast.isAutoClosing,
+            isPaused: paused,
+            isLoading: loading,
             stateClasses,
-            paused,
-            loading,
             progress,
             close,
             pause,
@@ -166,10 +166,11 @@ export function useCreate() {
             toast.state,
             toast.isSticky,
             toast.isClosable,
+            toast.isClickable,
             toast.isAutoClosing,
-            stateClasses,
             paused,
             loading,
+            stateClasses,
             progress,
             close,
             pause,

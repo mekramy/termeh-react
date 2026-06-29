@@ -166,7 +166,8 @@
                         }
                     }
 
-                    &.is-closable {
+                    &.is-closable,
+                    &.is-clickable {
                         cursor: help;
 
                         &:hover {

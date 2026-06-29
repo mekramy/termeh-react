@@ -93,6 +93,10 @@ export class Toast {
         return this.mode === "sticky";
     }
 
+    public get isClickable(): boolean {
+        return !!this.options.onClick;
+    }
+
     public get isClosable(): boolean {
         return this.options.closable;
     }
