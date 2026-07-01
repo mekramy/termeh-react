@@ -106,10 +106,10 @@ export interface ProviderOptions {
     bodyClass: string | undefined;
 
     /** Animation variants for toast stages */
-    animations: Animations | undefined;
+    animations: Animations;
 
     /** Animation variants for provider action bar */
-    actionBarAnimations: ActionBarAnimation | undefined;
+    actionBarAnimations: ActionBarAnimation;
 }
 
 /**

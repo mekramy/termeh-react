@@ -16,7 +16,7 @@ export function useCreate() {
     // Read stores
     const ctx = useContext(ProviderContext);
     const toast = useContext(ToastContext);
-    if (!toast || !ctx) {
+    if (!ctx || !toast) {
         throw new Error("useCreate must be used inside <ToastProvider />");
     }
 

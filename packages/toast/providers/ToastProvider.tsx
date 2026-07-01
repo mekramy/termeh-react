@@ -64,12 +64,10 @@ export function ToastProvider({
         () => ({
             show:
                 options?.actionBarAnimations?.show ??
-                defaults.actionBarAnimations?.show ??
-                {},
+                defaults.actionBarAnimations.show,
             hide:
                 options?.actionBarAnimations?.hide ??
-                defaults.actionBarAnimations?.hide ??
-                {},
+                defaults.actionBarAnimations.hide,
         }),
         [
             defaults,
@@ -79,34 +77,23 @@ export function ToastProvider({
     );
     const toastVariants = useMemo<Animations>(
         () => ({
-            idle: options?.animations?.idle ??
-                defaults.animations?.idle ?? { opacity: 0 },
+            idle: options?.animations?.idle ?? defaults.animations.idle,
 
-            enter: options?.animations?.enter ??
-                defaults.animations?.enter ?? { opacity: 1 },
-            enterStack: options?.animations?.enterStack ??
-                defaults.animations?.enterStack ?? { opacity: 1 },
-            leave: options?.animations?.leave ??
-                defaults.animations?.leave ?? { opacity: 0 },
-            leaveStack: options?.animations?.leaveStack ??
-                defaults.animations?.leaveStack ?? { opacity: 0 },
+            enter: options?.animations?.enter ?? defaults.animations.enter,
+            enterStack:
+                options?.animations?.enterStack ??
+                defaults.animations.enterStack,
+            leave: options?.animations?.leave ?? defaults.animations.leave,
+            leaveStack:
+                options?.animations?.leaveStack ??
+                defaults.animations.leaveStack,
 
-            active: options?.animations?.active ??
-                defaults.animations?.active ?? { opacity: 1, scale: 1 },
-            secondary: options?.animations?.secondary ??
-                defaults.animations?.secondary ?? {
-                    opacity: 1,
-                    scale: 0.95,
-                    y: -10,
-                },
-            tertiary: options?.animations?.tertiary ??
-                defaults.animations?.tertiary ?? {
-                    opacity: 1,
-                    scale: 0.9,
-                    y: -20,
-                },
-            hidden: options?.animations?.hidden ??
-                defaults.animations?.hidden ?? { opacity: 0 },
+            active: options?.animations?.active ?? defaults.animations.active,
+            secondary:
+                options?.animations?.secondary ?? defaults.animations.secondary,
+            tertiary:
+                options?.animations?.tertiary ?? defaults.animations.tertiary,
+            hidden: options?.animations?.hidden ?? defaults.animations.hidden,
         }),
         [
             defaults,
