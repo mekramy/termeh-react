@@ -58,7 +58,7 @@ export function ToastProvider({
     // Computed
     const items = Array.from(toasts.values());
     const count = items.length;
-    const bodyClass = options?.bodyClass ?? defaults.bodyClass ?? "";
+    const rootClass = options?.rootClass ?? defaults.rootClass ?? "";
     const actionBarAnimate = !isStacked && count ? "show" : "hide";
     const actionBarVariants = useMemo(
         () => ({
@@ -109,12 +109,12 @@ export function ToastProvider({
         ]
     );
 
-    // Toggle body class
-    if (bodyClass && typeof document !== "undefined") {
+    // Toggle <html> class
+    if (rootClass && typeof document !== "undefined") {
         if (count) {
-            document.body.classList.add(bodyClass);
+            document.documentElement.classList.add(rootClass);
         } else {
-            document.body.classList.remove(bodyClass);
+            document.documentElement.classList.remove(rootClass);
         }
     }
 

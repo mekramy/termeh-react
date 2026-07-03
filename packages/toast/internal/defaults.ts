@@ -10,7 +10,7 @@ export function getDefaults(direction: "rtl" | "ltr"): ProviderOptions {
         duration: 5,
         closable: true,
         direction,
-        bodyClass: undefined,
+        rootClass: undefined,
         animations: {
             idle: {},
             enter: {

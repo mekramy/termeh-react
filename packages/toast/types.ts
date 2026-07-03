@@ -102,8 +102,8 @@ export interface ProviderOptions {
     /** Text direction: right-to-left or left-to-right */
     direction: "rtl" | "ltr";
 
-    /** CSS class to apply to the <body> element */
-    bodyClass: string | undefined;
+    /** CSS class to apply to the <html> element */
+    rootClass: string | undefined;
 
     /** Animation variants for toast stages */
     animations: Animations;
