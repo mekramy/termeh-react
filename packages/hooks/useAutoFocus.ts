@@ -1,5 +1,4 @@
-import type { RefCallback } from "react";
-import { useRefCallback } from "./useRefCallback";
+import { useIsomorphicLayoutEffect } from "./shared";
 
 /** Element type that supports focus. */
 type FocusableElement = Pick<HTMLElement, "focus">;
@@ -7,12 +6,10 @@ type FocusableElement = Pick<HTMLElement, "focus">;
 /**
  * Hook that automatically focuses the given element when it mounts.
  *
- * @returns A ref callback to bind to the focusable element
+ * @param element Reference to focusable element
  */
-export function useAutoFocus(): RefCallback<FocusableElement> {
-    const [ref] = useRefCallback<FocusableElement>((el) => {
-        el.focus();
-    });
-
-    return ref;
+export function useAutoFocus(element: FocusableElement | null) {
+    useIsomorphicLayoutEffect(() => {
+        element?.focus();
+    }, [element]);
 }

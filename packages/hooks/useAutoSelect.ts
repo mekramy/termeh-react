@@ -1,5 +1,4 @@
-import type { RefCallback } from "react";
-import { useRefCallback } from "./useRefCallback";
+import { useIsomorphicLayoutEffect } from "./shared";
 
 /** Element type that supports text selection. */
 type SelectableElement = Pick<
@@ -15,44 +14,45 @@ type SelectableElement = Pick<
  * Hook that auto-selects the input value when clicked. Optionally restricts
  * selection boundaries using a separator.
  *
+ * @param element Reference to selectable element
  * @param separator Optional string to determine selection boundaries
- * @returns A ref callback for binding to the input element
  */
 export function useAutoSelect(
+    element: SelectableElement | null,
     separator?: string
-): RefCallback<SelectableElement> {
-    const [ref] = useRefCallback<SelectableElement>((el) => {
+) {
+    useIsomorphicLayoutEffect(() => {
+        if (!element) return;
+
         const handler = () => {
             let start = 0;
-            let end = el.value.length;
+            let end = element.value.length;
 
             if (separator) {
-                const pos = el.selectionStart ?? 0;
+                const pos = element.selectionStart ?? 0;
 
                 // Find start boundary
                 for (let i = pos - 1; i >= 0; i--) {
-                    if (el.value[i] === separator) {
+                    if (element.value[i] === separator) {
                         start = i + 1;
                         break;
                     }
                 }
 
                 // Find end boundary
-                for (let i = pos; i < el.value.length; i++) {
-                    if (el.value[i] === separator) {
+                for (let i = pos; i < element.value.length; i++) {
+                    if (element.value[i] === separator) {
                         end = i;
                         break;
                     }
                 }
             }
 
-            el.setSelectionRange(start, end, "forward");
+            element.setSelectionRange(start, end, "forward");
         };
 
-        el.addEventListener("click", handler);
+        element.addEventListener("click", handler);
 
-        return () => el.removeEventListener("click", handler);
-    });
-
-    return ref;
+        return () => element.removeEventListener("click", handler);
+    }, [element, separator]);
 }

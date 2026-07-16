@@ -30,7 +30,7 @@ export interface ListerOptions {
     /** Storage key */
     key: unknown[];
     /** Callback triggered after any parameter update */
-    callback: Callback;
+    callback: Callback | null;
     /** Default initial parameters */
     defaults: Partial<ListerParams>;
     /** Whether to persist the limit value */

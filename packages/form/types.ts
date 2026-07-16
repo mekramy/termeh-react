@@ -223,7 +223,7 @@ export interface FieldStore {
      *   and state.
      * @returns Void
      */
-    setField: <T = unknown>(name: string, context: FieldContext<T>) => void;
+    register: <T = unknown>(name: string, context: FieldContext<T>) => void;
 
     /**
      * Updates a field's value and marks it as touched if the new value differs

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useEvent } from "./useEvent";
 
 /**
  * Registers global keyboard shortcuts and executes a handler when matched.
@@ -30,8 +31,7 @@ export function useShortcut(
     );
 
     // Stats
-    const handlerRef = useRef(handler);
-    handlerRef.current = handler;
+    const handlerFn = useEvent(handler);
 
     // Side effects
     useEffect(() => {
@@ -49,7 +49,7 @@ export function useShortcut(
                 if (isMatch) {
                     if (prevent) e.preventDefault();
                     if (stop) e.stopPropagation();
-                    handlerRef.current(e);
+                    handlerFn(e);
                     break;
                 }
             }
@@ -57,5 +57,5 @@ export function useShortcut(
 
         window.addEventListener("keydown", listener);
         return () => window.removeEventListener("keydown", listener);
-    }, [prevent, stop]);
+    }, [handlerFn, prevent, stop]);
 }

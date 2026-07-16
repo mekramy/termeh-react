@@ -1,11 +1,5 @@
-import { useCallback, useEffect, useLayoutEffect, useState } from "react";
-
-/**
- * Like useLayoutEffect, but safe for SSR — falls back to useEffect on the
- * server.
- */
-const useIsomorphicLayoutEffect =
-    typeof window !== "undefined" ? useLayoutEffect : useEffect;
+import { useCallback, useState, type RefCallback } from "react";
+import { useIsomorphicLayoutEffect } from "./shared";
 
 /**
  * A universal ref hook that tracks a DOM node or any custom ref target
@@ -24,7 +18,9 @@ const useIsomorphicLayoutEffect =
  *   return a cleanup function that runs on unmount or ref change.
  * @returns {undefined} RefCallback, currentElement
  */
-export function useRefCallback<T>(onAttach?: (el: T) => void | (() => void)) {
+export function useRefCallback<T>(
+    onAttach?: (el: T) => void | (() => void)
+): [RefCallback<T>, T | null] {
     const [element, setElement] = useState<T | null>(null);
 
     // stable ref callback for React

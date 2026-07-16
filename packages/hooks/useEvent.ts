@@ -1,12 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
-
-/**
- * Like useLayoutEffect, but safe for SSR — falls back to useEffect on the
- * server.
- */
-const useIsomorphicLayoutEffect =
-    typeof window !== "undefined" ? useLayoutEffect : useEffect;
+import { useCallback, useRef } from "react";
+import { useIsomorphicLayoutEffect } from "./shared";
 
 /**
  * Returns a stable callback that always calls the latest version of fn.
@@ -18,7 +12,7 @@ const useIsomorphicLayoutEffect =
  *
  *     addEventListener("click", onClick);
  */
-export function useEvent<T extends (...args: any[]) => any>(fn: T): T {
+export function useEvent<T extends (...args: any[]) => any>(fn: T | null): T {
     const fnRef = useRef(fn);
 
     useIsomorphicLayoutEffect(() => {
@@ -27,7 +21,7 @@ export function useEvent<T extends (...args: any[]) => any>(fn: T): T {
 
     return useCallback(
         ((...args: Parameters<T>): ReturnType<T> => {
-            return fnRef.current(...args);
+            return fnRef.current?.(...args);
         }) as T,
         []
     );

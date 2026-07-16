@@ -1,5 +1,5 @@
-import { useRef, useState } from "react";
-import { useRefCallback } from "./useRefCallback";
+import { useCallback, useMemo, useRef, useState } from "react";
+import { useIsomorphicLayoutEffect } from "./shared";
 
 /**
  * Defines the types of observers that can be used to trigger scroll state
@@ -23,115 +23,170 @@ interface ScrollStateOptions {
  * directions (Top, Bottom, Left, Right). It uses native events and observers
  * (Resize/Mutation) for robustness and accurate state tracking.
  *
- * @param container - A TemplateRef or Ref to the scrollable HTML element.
+ * @param element - A TemplateRef or Ref to the scrollable HTML element.
  * @param options - Configuration options for the scroll state and observers.
  * @returns An object containing comprehensive reactive scroll state properties
  *   and a RefCallback to attach to scrollable element.
  */
-export function useScrollState(options: ScrollStateOptions = {}) {
-    // Options
-    const threshold = options.threshold ?? 0;
-    const observers = options.observers ?? ["scroll", "resize", "mutation"];
-
-    // Stats
+export function useScrollState<T extends HTMLElement>(
+    element: T | null,
+    {
+        threshold = 0,
+        observers = ["scroll", "resize", "mutation"],
+    }: ScrollStateOptions = {}
+) {
     const rafRef = useRef<number | null>(null);
+
     const [state, setState] = useState({
         x: 0,
         y: 0,
+
         isScrollableX: false,
         isScrollableY: false,
+
         isAtTop: true,
         isAtBottom: true,
         isAtLeft: true,
         isAtRight: true,
+
         hasScrollTop: false,
         hasScrollBottom: false,
         hasScrollLeft: false,
         hasScrollRight: false,
     });
 
-    // API
-    const [ref] = useRefCallback<Element>((el) => {
-        // Helpers
-        const measure = () => {
-            if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
-            rafRef.current = requestAnimationFrame(() => {
-                const {
-                    scrollTop,
-                    scrollHeight,
-                    clientHeight,
-                    scrollLeft,
-                    scrollWidth,
-                    clientWidth,
-                } = el;
+    const update = useCallback(() => {
+        if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
 
-                // Calculate
-                const scrollableX = scrollWidth > clientWidth;
-                const scrollableY = scrollHeight > clientHeight;
-                const atTop = scrollTop <= threshold;
-                const atBottom =
-                    scrollTop + clientHeight >= scrollHeight - threshold;
-                const atLeft = scrollLeft <= threshold;
-                const atRight =
-                    scrollLeft + clientWidth >= scrollWidth - threshold;
+        if (!element) {
+            setState((prev) => {
+                const next = {
+                    x: 0,
+                    y: 0,
 
-                // Set Stats
-                setState({
+                    isScrollableX: false,
+                    isScrollableY: false,
+
+                    isAtTop: true,
+                    isAtBottom: true,
+                    isAtLeft: true,
+                    isAtRight: true,
+
+                    hasScrollTop: false,
+                    hasScrollBottom: false,
+                    hasScrollLeft: false,
+                    hasScrollRight: false,
+                };
+
+                return Object.keys(next).every(
+                    (k) =>
+                        prev[k as keyof typeof prev] ===
+                        next[k as keyof typeof next]
+                )
+                    ? prev
+                    : next;
+            });
+
+            return;
+        }
+
+        rafRef.current = requestAnimationFrame(() => {
+            const {
+                scrollTop,
+                scrollHeight,
+                clientHeight,
+                scrollLeft,
+                scrollWidth,
+                clientWidth,
+            } = element;
+
+            const scrollableX = scrollWidth > clientWidth;
+            const scrollableY = scrollHeight > clientHeight;
+
+            const atTop = scrollTop <= threshold;
+            const atBottom =
+                scrollTop + clientHeight >= scrollHeight - threshold;
+
+            const atLeft = scrollLeft <= threshold;
+            const atRight = scrollLeft + clientWidth >= scrollWidth - threshold;
+
+            setState((prev) => {
+                const next = {
                     x: scrollLeft,
                     y: scrollTop,
+
                     isScrollableX: scrollableX,
                     isScrollableY: scrollableY,
+
                     isAtTop: scrollableY ? atTop : true,
                     isAtBottom: scrollableY ? atBottom : true,
+
                     isAtLeft: scrollableX ? atLeft : true,
                     isAtRight: scrollableX ? atRight : true,
+
                     hasScrollTop: scrollableY && !atTop,
                     hasScrollBottom: scrollableY && !atBottom,
+
                     hasScrollLeft: scrollableX && !atLeft,
                     hasScrollRight: scrollableX && !atRight,
-                });
+                };
+
+                return Object.keys(next).every(
+                    (k) =>
+                        prev[k as keyof typeof prev] ===
+                        next[k as keyof typeof next]
+                )
+                    ? prev
+                    : next;
             });
-        };
+        });
+    }, [element, threshold]);
 
-        // initial measure
-        measure();
+    useIsomorphicLayoutEffect(() => {
+        update();
+    }, [update]);
 
-        // Listeners
+    useIsomorphicLayoutEffect(() => {
+        if (!element) return;
+
         if (observers.includes("scroll")) {
-            el.addEventListener("scroll", measure, { passive: true });
+            element.addEventListener("scroll", update, { passive: true });
         }
 
         let resizeObserver: ResizeObserver | null = null;
         if (observers.includes("resize")) {
-            resizeObserver = new ResizeObserver(measure);
-            resizeObserver.observe(el);
+            resizeObserver = new ResizeObserver(update);
+            resizeObserver.observe(element);
         }
 
         let mutationObserver: MutationObserver | null = null;
         if (observers.includes("mutation")) {
-            mutationObserver = new MutationObserver(measure);
-            mutationObserver.observe(el, {
-                attributes: true,
+            mutationObserver = new MutationObserver(update);
+            mutationObserver.observe(element, {
                 childList: true,
                 subtree: true,
+                attributes: true,
             });
         }
 
-        // Cleanup
         return () => {
-            if (observers.includes("scroll")) {
-                el.removeEventListener("scroll", measure);
-            }
+            if (observers.includes("scroll"))
+                element.removeEventListener("scroll", update);
+
             resizeObserver?.disconnect();
             mutationObserver?.disconnect();
+
             if (rafRef.current !== null) {
                 cancelAnimationFrame(rafRef.current);
             }
         };
-    });
+    }, [element, observers, update]);
 
-    return {
-        ref,
-        ...state,
-    };
+    return useMemo(
+        () => ({
+            ...state,
+            update,
+        }),
+        [state, update]
+    );
 }

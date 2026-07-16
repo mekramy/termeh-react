@@ -7,7 +7,7 @@ import {
     useTransition,
 } from "react";
 import { ValidationError, type Schema } from "yup";
-import { useDebounceCallback } from "../../hooks";
+import { useDebounceCallback, useRefCallbackAdapter } from "../../hooks";
 import { useMasker } from "../../mask";
 import type { MaskOption } from "../../mask/types";
 import { newId } from "../../utils";
@@ -23,7 +23,7 @@ interface FieldOptions<T = unknown> {
     /** Mask configuration object or `null` to disable masking. */
     mask: MaskOption;
 
-    /** The initial value for the field. Defaults to the schema's default value. */
+    /** The initial value for the field. initial behaves like defaultValue. */
     initial: T;
 
     /**
@@ -76,6 +76,7 @@ interface FieldOptions<T = unknown> {
  *
  *   - `id`: The unique field identifier (for DOM element lookup).
  *   - `ref`: Ref callback for binding to input element.
+ *   - `element`: Reference to input element.
  *   - `value`: The current field value.
  *   - `isTouched`: Whether the field has been interacted with.
  *   - `errors`: Array of error messages for the field.
@@ -91,7 +92,7 @@ export function useField<T = unknown>(
     options: Partial<FieldOptions<T>> = {}
 ) {
     // Options
-    const { name: form, errors: _errors, fields: fields } = ctx;
+    const { name: form, errors: _errors, fields } = ctx;
     const {
         mask,
         initial = resolveYupDefault(schema),
@@ -102,6 +103,20 @@ export function useField<T = unknown>(
         serialize,
         serializeFormData,
     } = options;
+
+    // Register field
+    const idRef = useRef(`${form}-${name}-${newId()}`);
+    fields.register(name, {
+        id: idRef.current,
+        value: initial as T,
+        touched: false,
+        schema,
+        query,
+        initial: initial as T,
+        parse,
+        serialize,
+        serializeFormData,
+    });
 
     // Subscribe to field and error stores
     const fieldSnap = useSyncExternalStore(
@@ -116,8 +131,8 @@ export function useField<T = unknown>(
     );
 
     // Stats
-    const ref = useMasker(mask ?? null);
     const [, startTransition] = useTransition();
+    const [ref, element] = useRefCallbackAdapter(useMasker(mask ?? null));
     const abortRef = useRef<AbortController | null>(null);
     useDebounceCallback(fieldSnap?.value as T, debounce || 300, (v) => {
         if (trigger !== "change" || !fieldSnap?.touched) return;
@@ -151,21 +166,11 @@ export function useField<T = unknown>(
         });
     });
 
-    // Register field
+    // unmount
     useEffect(() => {
-        fields.setField(name, {
-            id: `${form}-${name}-${newId()}`,
-            value: initial as T,
-            touched: false,
-            schema,
-            query,
-            initial: initial as T,
-            parse,
-            serialize,
-            serializeFormData,
-        });
-
-        return () => abortRef.current?.abort();
+        return () => {
+            abortRef.current?.abort();
+        };
     }, []);
 
     // Derived state
@@ -217,6 +222,7 @@ export function useField<T = unknown>(
         () => ({
             id,
             ref,
+            element,
             value,
             isTouched,
             errors,
@@ -229,6 +235,7 @@ export function useField<T = unknown>(
         [
             id,
             ref,
+            element,
             value,
             isTouched,
             errors,

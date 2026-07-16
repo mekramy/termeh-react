@@ -64,9 +64,9 @@ export function createFieldStore(): FieldStore {
         }
     };
 
-    const setField = <T = unknown>(name: string, context: FieldContext<T>) => {
+    const register = <T = unknown>(name: string, context: FieldContext<T>) => {
+        if (state.has(name)) return;
         state.set(name, context as FieldContext<unknown>);
-        _notify(name);
     };
 
     const setValue = (name: string, value: unknown) => {
@@ -89,7 +89,7 @@ export function createFieldStore(): FieldStore {
         subscribe,
         reset,
         resetField,
-        setField,
+        register,
         setValue,
         getField,
     };

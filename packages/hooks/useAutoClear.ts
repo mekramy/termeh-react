@@ -1,5 +1,4 @@
-import type { RefCallback } from "react";
-import { useRefCallback } from "./useRefCallback";
+import { useIsomorphicLayoutEffect } from "./shared";
 
 /** Element type that supports Select Range. */
 type ClearableElement = Pick<
@@ -16,49 +15,50 @@ type ClearableElement = Pick<
  * Hook that clears the input value when the Escape key is pressed. Supports
  * clearing only the portion around a separator if provided.
  *
+ * @param element Reference to clearable element
  * @param separator Optional character to determine selection boundaries
- * @returns Ref callback for binding to input element
  */
 export function useAutoClear(
+    element: ClearableElement | null,
     separator?: string
-): RefCallback<ClearableElement> {
-    const [ref] = useRefCallback<ClearableElement>((el) => {
+) {
+    useIsomorphicLayoutEffect(() => {
+        if (!element) return;
+
         const handler = (ev: KeyboardEvent) => {
             if (ev.code !== "Escape") return;
 
             let start = 0;
-            let end = el.value.length;
+            let end = element.value.length;
 
             if (separator) {
-                const pos = el.selectionStart ?? 0;
+                const pos = element.selectionStart ?? 0;
 
                 // Find start boundary
                 for (let i = pos - 1; i >= 0; i--) {
-                    if (el.value[i] === separator) {
+                    if (element.value[i] === separator) {
                         start = i;
                         break;
                     }
                 }
 
                 // Find end boundary
-                for (let i = pos; i < el.value.length; i++) {
-                    if (el.value[i] === separator) {
+                for (let i = pos; i < element.value.length; i++) {
+                    if (element.value[i] === separator) {
                         end = i;
                         break;
                     }
                 }
             }
 
-            el.setRangeText("", start, end);
-            el.dispatchEvent(
+            element.setRangeText("", start, end);
+            element.dispatchEvent(
                 new Event("input", { bubbles: true, cancelable: true })
             );
         };
 
-        el.addEventListener("keydown", handler);
+        element.addEventListener("keydown", handler);
 
-        return () => el.removeEventListener("keydown", handler);
-    });
-
-    return ref;
+        return () => element.removeEventListener("keydown", handler);
+    }, [element, separator]);
 }

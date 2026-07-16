@@ -1,13 +1,8 @@
 import { useCallback, useMemo, useRef, useState } from "react";
-import { useStorage } from "../hooks";
+import { useEvent, useStorage } from "../hooks";
 import { sign, validate } from "../signer";
 import { createKey, isObject } from "../utils";
-import type {
-    Callback,
-    ListerData,
-    ListerOptions,
-    ListerParams,
-} from "./types";
+import type { ListerData, ListerOptions, ListerParams } from "./types";
 import {
     arraySafe,
     decode,
@@ -70,18 +65,13 @@ import {
  *   - **parseResponse(response: unknown)**: parses an API response and updates
  *       state accordingly.
  */
-export function useLister<TRecord = unknown, TMeta = unknown>(
-    options: Partial<ListerOptions> = {}
-) {
-    // Options
-    const {
-        key = [],
-        defaults = {},
-        callback = null,
-        rememberLimit = true,
-        rememberSorts = true,
-    } = options;
-
+export function useLister<TRecord = unknown, TMeta = unknown>({
+    key = [],
+    defaults = {},
+    callback = null,
+    rememberLimit = true,
+    rememberSorts = true,
+}: Partial<ListerOptions> = {}) {
     // Storage
     const storageKey = createKey(key, "-");
     const storage = useStorage(
@@ -89,44 +79,19 @@ export function useLister<TRecord = unknown, TMeta = unknown>(
         storageKey ? `${storageKey} lister` : ""
     );
 
-    // Initializer
-    const initial = (): ListerData<TRecord, TMeta> => {
-        const storedLimit = storage.number("limit");
-        const storedSorts = decodeSorts(storage.string("sorts") ?? "");
-
-        return {
-            page: 1,
-            limit: 20,
-            search: "",
-            sorts: [],
-            filters: {},
-            ...removeZero(defaults),
-            ...removeZero({
-                limit: rememberLimit && storageKey ? storedLimit : undefined,
-                sorts:
-                    rememberSorts && storageKey && storedSorts.length
-                        ? storedSorts
-                        : undefined,
-            }),
-
-            sign: "",
-            total: 0,
-            pages: 0,
-            from: 0,
-            to: 0,
-            meta: {} as TMeta,
-            records: [] as unknown[] as TRecord[],
-        };
-    };
-
     // Stats and Refs
-    const [stats, setStats] = useState<ListerData<TRecord, TMeta>>(initial);
+    const [stats, setStats] = useState<ListerData<TRecord, TMeta>>(() =>
+        createListerInitial(
+            storage,
+            storageKey,
+            defaults,
+            rememberLimit,
+            rememberSorts
+        )
+    );
+    const callbackRef = useEvent(callback);
     const lockRef = useRef<boolean>(false);
-    const callbackRef = useRef<Callback | null>(callback);
     const statsRef = useRef<ListerData<TRecord, TMeta>>(stats);
-
-    // keep callbackRef up-to-date
-    callbackRef.current = callback;
 
     // Helpers
     const persistStats = useCallback(
@@ -175,7 +140,14 @@ export function useLister<TRecord = unknown, TMeta = unknown>(
 
     // APIs
     const reset = useCallback(async () => {
-        const init = initial();
+        const init = createListerInitial(
+            storage,
+            storageKey,
+            defaults,
+            rememberLimit,
+            rememberSorts
+        );
+
         // Sign
         const next = {
             page: init.page,
@@ -205,8 +177,17 @@ export function useLister<TRecord = unknown, TMeta = unknown>(
         persistStore(next);
 
         // Notify
-        callbackRef.current?.(next, encode(next));
-    }, []);
+        callbackRef(next, encode(next));
+    }, [
+        callbackRef,
+        persistStats,
+        persistStore,
+        storage,
+        storageKey,
+        defaults,
+        rememberLimit,
+        rememberSorts,
+    ]);
 
     const apply = useCallback(
         async (filters: Partial<ListerParams>) => {
@@ -243,12 +224,12 @@ export function useLister<TRecord = unknown, TMeta = unknown>(
                 persistStore(next);
 
                 // Notify
-                callbackRef.current?.(next, encode(next));
+                callbackRef(next, encode(next));
             } finally {
                 lockRef.current = false;
             }
         },
-        [persistStats, persistStore]
+        [callbackRef, persistStats, persistStore]
     );
 
     const parseUrl = useCallback(
@@ -343,12 +324,12 @@ export function useLister<TRecord = unknown, TMeta = unknown>(
                 persistStore(next);
 
                 // Notify
-                callbackRef.current?.(next, encode(next));
+                callbackRef(next, encode(next));
             } finally {
                 lockRef.current = false;
             }
         },
-        [persistStats, persistStore]
+        [callbackRef, persistStats, persistStore]
     );
 
     const filter = useCallback(
@@ -397,4 +378,44 @@ export function useLister<TRecord = unknown, TMeta = unknown>(
         parseResponse,
         filter,
     } as const;
+}
+
+function createListerInitial<TRecord = unknown, TMeta = unknown>(
+    storage: ReturnType<typeof useStorage>,
+    storageKey: string,
+    defaults: Partial<ListerData<TRecord, TMeta>>,
+    rememberLimit: boolean,
+    rememberSorts: boolean
+): ListerData<TRecord, TMeta> {
+    const storedLimit = storage.number("limit");
+    const storedSorts = decodeSorts(storage.string("sorts") ?? "");
+
+    return {
+        page: 1,
+        limit: 20,
+        search: "",
+        sorts: [],
+        filters: {},
+
+        ...removeZero(defaults),
+
+        ...removeZero({
+            limit: rememberLimit && storageKey ? storedLimit : undefined,
+
+            sorts:
+                rememberSorts && storageKey && storedSorts.length
+                    ? storedSorts
+                    : undefined,
+        }),
+
+        sign: "",
+
+        total: 0,
+        pages: 0,
+        from: 0,
+        to: 0,
+
+        meta: {} as TMeta,
+        records: [] as TRecord[],
+    };
 }
