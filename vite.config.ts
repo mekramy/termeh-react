@@ -52,7 +52,8 @@ export default defineConfig({
         viteStaticCopy({
             targets: [
                 { src: "./packages/style.scss", dest: "." },
-                { src: "./packages/toast/styles", dest: "./toast" },
+                { src: "./packages/toast/scss", dest: "./toast" },
+                { src: "./packages/toast/style.scss", dest: "./toast" },
             ],
         }),
     ],
