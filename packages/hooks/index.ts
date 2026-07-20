@@ -9,6 +9,7 @@ export * from "./useDebounceCallback";
 export * from "./useDeepMemo";
 export * from "./useElementBounding";
 export * from "./useEvent";
+export * from "./useMotionPan";
 export * from "./useRefCallback";
 export * from "./useRefCallbackAdapter";
 export * from "./useScrollState";
