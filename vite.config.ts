@@ -1,9 +1,10 @@
-import react from "@vitejs/plugin-react";
+import babel from "@rolldown/plugin-babel";
+import react, { reactCompilerPreset } from "@vitejs/plugin-react";
 import { resolve } from "path";
 import { defineConfig } from "vite";
 import dts from "vite-plugin-dts";
 import { viteStaticCopy } from "vite-plugin-static-copy";
-import pkg from "./package.json";
+import pkg from "./package.json" with { type: "json" };
 
 /// <reference types="vitest" />
 // Configure Vitest (https://vitest.dev/config/)
@@ -15,15 +16,21 @@ export default defineConfig({
             formats: ["es"],
             name: "TermehReact",
             entry: {
-                index: resolve(__dirname, "packages/index.ts"),
-                utils: resolve(__dirname, "packages/utils/index.ts"),
-                signer: resolve(__dirname, "packages/signer/index.ts"),
-                hooks: resolve(__dirname, "packages/hooks/index.ts"),
-                mq: resolve(__dirname, "packages/mq/index.ts"),
-                mask: resolve(__dirname, "packages/mask/index.ts"),
-                form: resolve(__dirname, "packages/form/index.ts"),
-                lister: resolve(__dirname, "packages/lister/index.ts"),
-                toast: resolve(__dirname, "packages/toast/index.ts"),
+                index: resolve(import.meta.dirname, "packages/index.ts"),
+                utils: resolve(import.meta.dirname, "packages/utils/index.ts"),
+                signer: resolve(
+                    import.meta.dirname,
+                    "packages/signer/index.ts"
+                ),
+                hooks: resolve(import.meta.dirname, "packages/hooks/index.ts"),
+                mq: resolve(import.meta.dirname, "packages/mq/index.ts"),
+                mask: resolve(import.meta.dirname, "packages/mask/index.ts"),
+                form: resolve(import.meta.dirname, "packages/form/index.ts"),
+                lister: resolve(
+                    import.meta.dirname,
+                    "packages/lister/index.ts"
+                ),
+                toast: resolve(import.meta.dirname, "packages/toast/index.ts"),
             },
             fileName: (format, entry) => {
                 if (entry === "index") {
@@ -39,11 +46,12 @@ export default defineConfig({
         },
     },
     plugins: [
-        react({
-            babel: {
-                plugins: [["babel-plugin-react-compiler"]],
-            },
+        react(),
+
+        babel({
+            presets: [reactCompilerPreset()],
         }),
+
         dts({
             insertTypesEntry: true,
             copyDtsFiles: true,

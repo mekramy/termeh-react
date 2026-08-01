@@ -1,3 +1,5 @@
+import type { Maybe } from "./type";
+
 /**
  * Concatenates multiple items into a single space-separated string while
  * filtering out nullish, empty, and invalid numeric values.
@@ -16,8 +18,8 @@ export function concat(...items: unknown[]): string {
         .map((item) => {
             if (item == null || (typeof item === "number" && isNaN(item)))
                 return "";
-            const str = String(item).trim();
-            return str.length > 0 ? str : "";
+
+            return String(item).trim();
         })
         .filter(Boolean)
         .join(" ");
@@ -52,10 +54,13 @@ export function truncate(v: string, length: number): string {
  * @param items - One or more strings to include in the slug.
  * @returns A cleaned, lower-cased ASCII slug.
  */
-export function slugify(joiner: string, ...items: string[]): string {
+export function slugify(
+    joiner: string,
+    ...items: Array<Maybe<string>>
+): string {
     return items
-        .filter((item) => item != null && item.trim().length > 0)
-        .map((item) => item.trim().toLowerCase())
+        .filter((i): i is string => i != null && i.trim().length > 0)
+        .map((i) => i.trim().toLowerCase())
         .join(joiner)
         .replace(/\s+/g, joiner)
         .replace(new RegExp(`[^a-z0-9${joiner}]+`, "g"), "")
@@ -75,9 +80,12 @@ export function slugify(joiner: string, ...items: string[]): string {
  *   are preserved (no ASCII-only filtering).
  * @returns A cleaned Unicode-aware slug.
  */
-export function slugifyUnicode(joiner: string, ...items: string[]): string {
+export function slugifyUnicode(
+    joiner: string,
+    ...items: Array<Maybe<string>>
+): string {
     return items
-        .filter((item) => item != null && item.trim().length > 0)
+        .filter((i): i is string => i != null && i.trim().length > 0)
         .map((item) => item.trim())
         .join(joiner)
         .replace(/\s+/g, joiner) // normalize spaces
@@ -103,7 +111,5 @@ export function mapValue(
     v: string,
     replacements: Record<string, string>
 ): string {
-    if (v in replacements) return replacements[v];
-    if ("*" in replacements) return replacements["*"];
-    return v;
+    return replacements[v] ?? replacements["*"] ?? v;
 }

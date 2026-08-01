@@ -1,9 +1,15 @@
-/**
- * Represents a basic, non-object data type used by the application.
- *
- * - Includes `string`, `number`, `boolean`, and `null`.
- */
-export type PrimitiveType = string | number | boolean | null;
+/** Nullable value. */
+export type Nullable<T> = T | null;
+
+/** Optional value. */
+export type Optional<T> = T | undefined;
+
+/** Nullable or optional value. */
+export type Maybe<T> = T | null | undefined;
+
+/** Represents a basic, non-object data type used by the application. */
+export type PrimitiveType =
+    string | number | boolean | bigint | symbol | null | undefined;
 
 /**
  * Represents a compound value composed from primitives:
@@ -13,9 +19,7 @@ export type PrimitiveType = string | number | boolean | null;
  * - A record (object) with primitive values
  */
 export type CompoundType =
-    | PrimitiveType
-    | PrimitiveType[]
-    | Record<string, PrimitiveType>;
+    PrimitiveType | PrimitiveType[] | Record<string, PrimitiveType>;
 
 /**
  * Checks whether a value is a string.

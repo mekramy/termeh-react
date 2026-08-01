@@ -26,7 +26,7 @@ export function isValidIranianBankCard(cardNumber?: string): boolean {
     let alternate = false;
 
     for (let i = cardNumber.length - 1; i >= 0; i--) {
-        let n = parseInt(cardNumber[i], 10);
+        let n = parseInt(cardNumber[i]!, 10);
         if (alternate) {
             n *= 2;
             if (n > 9) n -= 9;

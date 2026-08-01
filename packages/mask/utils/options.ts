@@ -70,6 +70,7 @@ export function resolveMask(tokens: TokenMap, mask: Definition): MaskitoMask {
                 return "";
             }
 
+            // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
             return tokens[item] || item;
         })
         .filter(Boolean) as MaskitoMask;
@@ -90,7 +91,7 @@ export function resolveOptions(
     tokens: TokenMap,
     option: MaskOption
 ): MaskitoOptions {
-    return option?.mask
-        ? { ...(option?.options || {}), mask: resolveMask(tokens, option.mask) }
+    return option.mask
+        ? { ...(option.options ?? {}), mask: resolveMask(tokens, option.mask) }
         : (option.options ?? ({} as MaskitoOptions));
 }

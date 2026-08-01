@@ -1,6 +1,6 @@
 import { memo, useMemo } from "react";
-import { mask } from "../utils/masker";
 import type { MaskOption } from "../types";
+import { mask } from "../utils/masker";
 
 /**
  * Props for the `Masker` component.
@@ -31,7 +31,7 @@ const Masker: React.FC<MaskerProps> = ({ value, constructor }) => {
         [value, constructor]
     );
 
-    return <>{masked}</>;
+    return masked;
 };
 
 Masker.displayName = "Masker";

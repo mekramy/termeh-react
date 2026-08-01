@@ -171,5 +171,10 @@ export default tseslint.config(
             "no-console": "off",
             "@typescript-eslint/no-explicit-any": "off",
         },
+        languageOptions: {
+            parserOptions: {
+                project: "./tsconfig.eslint.json",
+            },
+        },
     }
 );

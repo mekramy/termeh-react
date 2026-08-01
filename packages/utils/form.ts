@@ -15,23 +15,27 @@
  * @returns The first `File` found in the input or `undefined` if none exists.
  */
 export function getFormFile(v: unknown): File | undefined {
-    let file: File | undefined | null;
-
-    if (Array.isArray(v)) {
-        file = v[0] as File | undefined;
-    } else if (typeof (v as FileList)?.item === "function") {
-        file = (v as FileList).item(0) as File | null;
-    } else if (v instanceof File) {
-        file = v as File;
-    } else if (typeof FormData !== "undefined" && v instanceof FormData) {
-        const iter = (v as FormData).values();
-        const first = iter.next().value;
-        file = first instanceof File ? first : undefined;
-    } else {
-        file = undefined;
+    if (v instanceof File) {
+        return v;
     }
 
-    return file ?? undefined;
+    if (Array.isArray(v)) {
+        return v.find((item): item is File => item instanceof File);
+    }
+
+    if (isFileList(v)) {
+        return v.item(0) ?? undefined;
+    }
+
+    if (typeof FormData !== "undefined" && v instanceof FormData) {
+        for (const item of v.values()) {
+            if (item instanceof File) {
+                return item;
+            }
+        }
+    }
+
+    return undefined;
 }
 
 /**
@@ -53,25 +57,39 @@ export function getFormFile(v: unknown): File | undefined {
  *   found an empty array is returned.
  */
 export function getFormFiles(v: unknown): File[] {
-    const files: File[] = [];
-
-    if (Array.isArray(v)) {
-        files.push(
-            ...(v as unknown[]).filter((x): x is File => x instanceof File)
-        );
-    } else if (typeof (v as FileList)?.item === "function") {
-        const fl = v as FileList;
-        for (let i = 0; i < fl.length; i++) {
-            const f = fl.item(i);
-            if (f instanceof File) files.push(f);
-        }
-    } else if (v instanceof File) {
-        files.push(v);
-    } else if (typeof FormData !== "undefined" && v instanceof FormData) {
-        for (const val of (v as FormData).values()) {
-            if (val instanceof File) files.push(val);
-        }
+    if (v instanceof File) {
+        return [v];
     }
 
-    return files;
+    if (Array.isArray(v)) {
+        return v.filter((item): item is File => item instanceof File);
+    }
+
+    if (isFileList(v)) {
+        const files: File[] = [];
+
+        for (const file of v) {
+            files.push(file);
+        }
+
+        return files;
+    }
+
+    if (typeof FormData !== "undefined" && v instanceof FormData) {
+        const files: File[] = [];
+
+        for (const item of v.values()) {
+            if (item instanceof File) {
+                files.push(item);
+            }
+        }
+
+        return files;
+    }
+
+    return [];
+}
+
+function isFileList(value: unknown): value is FileList {
+    return typeof FileList !== "undefined" && value instanceof FileList;
 }

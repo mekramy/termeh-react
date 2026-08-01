@@ -1,27 +1,10 @@
 import { describe, expect, it } from "vitest";
-import {
-    alter,
-    deepClone,
-    newId,
-    nullish,
-    toArray,
-} from "../../packages/utils";
+import { alter, deepClone, newId, toArray } from "../../packages/utils";
 
 describe("newId", () => {
     it("returns value if not nullish", () => {
         expect(newId(6)).length(6);
         expect(newId(11)).length(11);
-    });
-});
-
-describe("nullish", () => {
-    it("returns value if not nullish", () => {
-        expect(nullish(5, 10)).toBe(5);
-        expect(nullish("a", "b")).toBe("a");
-    });
-    it("returns alt if value is null or undefined", () => {
-        expect(nullish(null, 10)).toBe(10);
-        expect(nullish(undefined, "b")).toBe("b");
     });
 });
 

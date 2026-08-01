@@ -29,7 +29,7 @@ export function isValidIranianNationalCode(nationalCode?: string): boolean {
     let sum = 0;
 
     for (let i = 0; i < 9; i++) {
-        sum += digits[i] * (10 - i);
+        sum += digits[i]! * (10 - i);
     }
 
     const remainder = sum % 11;

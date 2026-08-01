@@ -38,7 +38,7 @@ import isEqual from "react-fast-compare";
  * @returns The memoized value; the returned reference is stable across renders
  *   while the deep-equality of the value remains true.
  */
-export function useDeepMemo<T>(value: T): T {
+export function useDeepMemoize<T>(value: T): T {
     const ref = useRef<T>(value);
 
     if (!isEqual(ref.current, value)) {

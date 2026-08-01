@@ -17,22 +17,6 @@ export function newId(length = 10): string {
 }
 
 /**
- * Returns the provided value if it is not `null` or `undefined`; otherwise
- * returns the supplied alternative.
- *
- * - Useful for providing fallback values while preserving falsy-but-valid values
- *   like `0` or `""`.
- *
- * @template T
- * @param v - The value to check.
- * @param alt - The alternative value to return if `v` is `null` or `undefined`.
- * @returns The original value `v` when present; otherwise `alt`.
- */
-export function nullish<T>(v: T | null | undefined, alt: T): T {
-    return v ?? alt;
-}
-
-/**
  * Returns the provided value if it is truthy; otherwise returns the supplied
  * alternative.
  *
@@ -45,7 +29,7 @@ export function nullish<T>(v: T | null | undefined, alt: T): T {
  * @returns The original value `v` when truthy; otherwise `alt`.
  */
 export function alter<T>(v: T, alt: T): T {
-    return (v as T) || alt;
+    return v || alt;
 }
 
 /**

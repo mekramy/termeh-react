@@ -29,7 +29,7 @@ export function flatternPath(path: string): string {
  * @returns The root path segment.
  */
 export function rootPath(path: string): string {
-    return flatternPath(path).split(".")[0];
+    return flatternPath(path).split(".")[0]!;
 }
 
 /**

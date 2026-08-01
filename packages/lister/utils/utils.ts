@@ -86,8 +86,8 @@ export function decodeObject(encoded: string): Record<string, PrimitiveType> {
     const obj: Record<string, PrimitiveType> = {};
     for (const part of encoded.split(",")) {
         const [k, v] = part.split(":");
-        if (k.trim() && v) {
-            obj[decodeValue(k.trim())] = inferType(v);
+        if (k!.trim() && v) {
+            obj[decodeValue(k!.trim())] = inferType(v);
         }
     }
     return obj;
@@ -114,8 +114,8 @@ export function decodeSorts(encoded: string): SortType[] {
         .map((item) => {
             if (!item.includes(":")) return undefined;
             const [fieldRaw, orderRaw] = item.split(":");
-            const field = decodeValue(fieldRaw.trim());
-            const order = decodeValue(orderRaw);
+            const field = decodeValue(fieldRaw!.trim());
+            const order = decodeValue(orderRaw!);
             return field && isOrderType(order) ? { field, order } : undefined;
         })
         .filter((i): i is SortType => i !== undefined);

@@ -33,6 +33,8 @@ export type DeepPartial<T> = {
         : T[P];
 };
 
+type PlainObject = Record<string, unknown>;
+
 /**
  * Deeply merges a new partial configuration into a base configuration object.
  *
@@ -52,7 +54,7 @@ export type DeepPartial<T> = {
  *   replace arrays, and ignore `undefined` values on non-object paths.
  * @returns A new configuration object containing the merged result.
  */
-export function mergeConfig<T extends Record<string, unknown>>(
+export function mergeConfig<T extends PlainObject>(
     config: T,
     newConfig: DeepPartial<T>,
     options?: MergeOptions
@@ -83,16 +85,7 @@ export function mergeConfig<T extends Record<string, unknown>>(
      * @param path - The current dot-separated path used to consult
      *   `strategies`.
      */
-    function merge(target: any, source: any, path = ""): void {
-        if (
-            typeof source !== "object" ||
-            source === null ||
-            Array.isArray(source)
-        ) {
-            // Nothing to traverse for non-objects or arrays (arrays are replaced)
-            return;
-        }
-
+    function merge(target: PlainObject, source: PlainObject, path = ""): void {
         for (const key of Object.keys(source)) {
             const currentPath = path ? `${path}.${key}` : key;
             const strategy = strategies[currentPath];
@@ -104,35 +97,38 @@ export function mergeConfig<T extends Record<string, unknown>>(
                 continue;
             }
 
-            // Default ignore for undefined primitive values when no explicit strategy
-            if (typeof sourceValue !== "object" && sourceValue === undefined) {
+            // Ignore undefined values by default
+            if (sourceValue === undefined) {
                 continue;
             }
 
-            // Replace strategy or arrays: clone source value and assign
+            // Replace strategy or arrays
             if (strategy === "replace" || Array.isArray(sourceValue)) {
                 target[key] = deepClone(sourceValue);
                 continue;
             }
 
-            // If both sides are plain objects (non-null), deep merge recursively
-            if (
-                typeof sourceValue === "object" &&
-                sourceValue !== null &&
-                typeof targetValue === "object" &&
-                targetValue !== null &&
-                !Array.isArray(targetValue)
-            ) {
+            // Deep merge plain objects
+            if (isPlainObject(sourceValue) && isPlainObject(targetValue)) {
                 merge(targetValue, sourceValue, currentPath);
-            } else {
-                // Fallback: replace with a cloned value from source
-                target[key] = deepClone(sourceValue);
+                continue;
             }
+
+            // Replace primitive or non-mergeable values
+            target[key] = deepClone(sourceValue);
         }
     }
 
-    // Start with a deep-cloned base to preserve the original config object.
     const result = deepClone(config);
     merge(result, newConfig);
     return result;
+}
+
+function isPlainObject(value: unknown): value is PlainObject {
+    if (typeof value !== "object" || value === null) {
+        return false;
+    }
+
+    const prototype = Object.getPrototypeOf(value);
+    return prototype === Object.prototype || prototype === null;
 }

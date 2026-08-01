@@ -1,5 +1,3 @@
-"use client";
-
 import type { PanInfo as MotionPanInfo, Point } from "motion/react";
 import { useMemo } from "react";
 
@@ -135,7 +133,7 @@ function resolveDirection(offset: Point): {
     if (directions.length === 1) {
         return {
             directions,
-            direction: directions[0],
+            direction: directions[0]!,
         };
     }
 

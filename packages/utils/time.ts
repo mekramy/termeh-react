@@ -129,7 +129,7 @@ function translateDuration(
     unit: TimeUnit,
     locale: "en" | "fa"
 ): string {
-    const translation = DURATION_TRANSLATIONS[unit][locale];
+    const translation = DURATION_TRANSLATIONS[unit]![locale];
     return `${value} ${translation}`;
 }
 
