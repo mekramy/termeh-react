@@ -12,6 +12,7 @@ export * from "./useElementBounding";
 export * from "./useEvent";
 export * from "./useLatest";
 export * from "./useMotionPan";
+export * from "./useMotionPanSnap";
 export * from "./useRefCallback";
 export * from "./useRefCallbackAdapter";
 export * from "./useScrollState";
