@@ -20,3 +20,4 @@ export * from "./useShortcut";
 export * from "./useStateRef";
 export * from "./useStorage";
 export * from "./useTimer";
+export * from "./useVisualViewport";
