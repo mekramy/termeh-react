@@ -198,24 +198,33 @@ export function useMotionPanSnap({
     }, []);
 
     const animateTo = useCallback(
-        (target: number, callback?: () => void) => {
+        (target: number, anim?: boolean, callback?: () => void) => {
             stopAnimations();
             const id = ++actionIdRef.current;
             const { axis, transition } = optionsRef.current;
 
-            const ax = animate(x, axis === "x" ? target : 0, transition);
-            const ay = animate(y, axis === "y" ? target : 0, transition);
-            animationsRef.current = [ax, ay];
+            const then = () => {
+                if (!mountedRef.current || id !== actionIdRef.current) return;
 
-            Promise.all([ax.finished, ay.finished])
-                .then(() => {
-                    if (!mountedRef.current || id !== actionIdRef.current)
-                        return;
+                animationsRef.current = [];
+                callback?.();
+            };
 
-                    animationsRef.current = [];
-                    callback?.();
-                })
-                .catch(() => {});
+            if (anim) {
+                const ax = animate(x, axis === "x" ? target : 0, transition);
+                const ay = animate(y, axis === "y" ? target : 0, transition);
+                animationsRef.current = [ax, ay];
+
+                Promise.all([ax.finished, ay.finished])
+                    .then(() => {
+                        then();
+                    })
+                    .catch(() => {});
+            } else {
+                x.set(axis === "x" ? target : 0);
+                y.set(axis === "y" ? target : 0);
+                then();
+            }
         },
         [x, y, optionsRef, stopAnimations]
     );
@@ -348,7 +357,7 @@ export function useMotionPanSnap({
 
     // APIs
     const snapTo = useCallback(
-        (index: number) => {
+        (index: number, animate: boolean = true) => {
             const clamped = safeIndex(index);
             const point = pointsRef.current[clamped];
             if (point === undefined) return;
@@ -356,7 +365,8 @@ export function useMotionPanSnap({
             const prevSnap = snapRef.current;
             setSnap(clamped);
             setNextSnap(clamped);
-            animateTo(point, () => {
+
+            animateTo(point, animate, () => {
                 if (clamped !== prevSnap) {
                     optionsRef.current.onSnap?.(clamped, point);
                 }
