@@ -2,6 +2,7 @@ export * from "./shared";
 export * from "./useAutoClear";
 export * from "./useAutoFocus";
 export * from "./useAutoSelect";
+export * from "./useBottomSheet";
 export * from "./useConfig";
 export * from "./useCountdown";
 export * from "./useDebounce";

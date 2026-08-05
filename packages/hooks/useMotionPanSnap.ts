@@ -116,13 +116,12 @@ export function useMotionPanSnap({
     onSnap,
     onCancel,
 }: UseMotionPanSnapOptions) {
-    const safeInitial = Math.min(initial, rawPoints.length - 1);
-
     const [points, pointsRef] = useDeepMemoizeLatest(
         [...rawPoints].sort((a, b) => a - b)
     );
-    const [snap, setSnap, snapRef] = useStateRef(safeInitial);
-    const [nextSnap, setNextSnap, nextSnapRef] = useStateRef(safeInitial);
+    const initialState = Math.max(0, Math.min(initial, points.length - 1));
+    const [snap, setSnap, snapRef] = useStateRef(initialState);
+    const [nextSnap, setNextSnap, nextSnapRef] = useStateRef(initialState);
     const optionsRef = useLatest({
         axis,
         elastic,
@@ -137,12 +136,12 @@ export function useMotionPanSnap({
     const mountedRef = useRef(true);
     const actionIdRef = useRef(0);
     const animationsRef = useRef<AnimationPlaybackControls[]>([]);
-    const startValueRef = useRef(points[safeInitial] ?? 0);
+    const startValueRef = useRef(points[initialState] ?? 0);
     const isDraggingRef = useRef(false);
 
     // Motion values
-    const x = useMotionValue(axis === "x" ? (points[safeInitial] ?? 0) : 0);
-    const y = useMotionValue(axis === "y" ? (points[safeInitial] ?? 0) : 0);
+    const x = useMotionValue(axis === "x" ? (points[initialState] ?? 0) : 0);
+    const y = useMotionValue(axis === "y" ? (points[initialState] ?? 0) : 0);
     const progress = useTransform(() => {
         const points = pointsRef.current;
         const { axis } = optionsRef.current;
@@ -384,8 +383,8 @@ export function useMotionPanSnap({
     );
 
     const reset = useCallback(() => {
-        snapTo(initial);
-    }, [initial, snapTo]);
+        snapTo(initialState);
+    }, [initialState, snapTo]);
 
     // Stable handlers
     const handleStart = useCallback(() => {
@@ -527,6 +526,20 @@ export function useMotionPanSnap({
         if (axis === "x") x.set(target);
         else y.set(target);
     }, [points, axis, x, y, snapRef, setSnap, setNextSnap, safeIndex]);
+
+    useEffect(() => {
+        if (isDraggingRef.current) return;
+
+        const { axis } = optionsRef.current;
+        const value = pointsRef.current[initialState];
+        if (value === undefined) return;
+
+        setSnap(initialState);
+        setNextSnap(initialState);
+
+        if (axis === "x") x.set(value);
+        else y.set(value);
+    }, [pointsRef, optionsRef, initialState, x, y, setSnap, setNextSnap]);
 
     useEffect(() => {
         return () => {
