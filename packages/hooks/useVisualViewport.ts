@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
+import type { ViewportMetrics } from "./shared";
 
 /**
  * Returns the visual viewport dimensions and scale.
  *
  * @returns The visual viewport dimensions and scale.
  */
-export function useVisualViewport() {
+export function useVisualViewport(): ViewportMetrics {
     const [viewport, setViewport] = useState(getViewport);
 
     useEffect(() => {
