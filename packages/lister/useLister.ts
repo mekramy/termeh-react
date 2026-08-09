@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from "react";
-import { useEvent, useStorage } from "../hooks";
+import { useStableCallback, useStorage } from "../hooks";
 import { sign, validate } from "../signer";
 import { createKey, isObject } from "../utils";
 import type { ListerData, ListerOptions, ListerParams } from "./types";
@@ -89,7 +89,7 @@ export function useLister<TRecord = unknown, TMeta = unknown>({
             rememberSorts
         )
     );
-    const callbackRef = useEvent(callback);
+    const callbackRef = useStableCallback(callback);
     const lockRef = useRef<boolean>(false);
     const statsRef = useRef<ListerData<TRecord, TMeta>>(stats);
 

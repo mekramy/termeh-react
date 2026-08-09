@@ -6,13 +6,15 @@ import { useIsomorphicLayoutEffect } from "./shared";
  * Returns a stable callback that always calls the latest version of fn.
  *
  * @example
- *     const onClick = useEvent(() => {
+ *     const onClick = useStableCallback(() => {
  *         console.log(count);
  *     });
  *
  *     addEventListener("click", onClick);
  */
-export function useEvent<T extends (...args: any[]) => any>(fn: T | null): T {
+export function useStableCallback<T extends (...args: any[]) => any>(
+    fn: T | null
+): T {
     const fnRef = useRef(fn);
 
     useIsomorphicLayoutEffect(() => {

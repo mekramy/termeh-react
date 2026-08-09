@@ -163,3 +163,34 @@ export function isPrimitiveRecord(
 export function isCompoundType(v: unknown): v is CompoundType {
     return isPrimitive(v) || isPrimitiveArray(v) || isPrimitiveRecord(v);
 }
+
+/** Represents the scroll state of an element. */
+export interface ScrollState {
+    /** Horizontal scroll offset in pixels */
+    scrollLeft: number;
+    /** Vertical scroll offset in pixels */
+    scrollTop: number;
+
+    /** Whether horizontal scrolling is possible */
+    canScrollHorizontally: boolean;
+    /** Whether vertical scrolling is possible */
+    canScrollVertically: boolean;
+
+    /** Whether scrolling up is possible */
+    canScrollUp: boolean;
+    /** Whether scrolling down is possible */
+    canScrollDown: boolean;
+    /** Whether scrolling left is possible */
+    canScrollLeft: boolean;
+    /** Whether scrolling right is possible */
+    canScrollRight: boolean;
+
+    /** Whether the top edge has been reached (within threshold) */
+    isTopEdgeReached: boolean;
+    /** Whether the bottom edge has been reached (within threshold) */
+    isBottomEdgeReached: boolean;
+    /** Whether the left edge has been reached (within threshold) */
+    isLeftEdgeReached: boolean;
+    /** Whether the right edge has been reached (within threshold) */
+    isRightEdgeReached: boolean;
+}

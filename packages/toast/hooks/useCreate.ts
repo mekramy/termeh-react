@@ -6,8 +6,8 @@ import {
     useRef,
     useState,
 } from "react";
-import { useEvent, useRefCallback } from "../../hooks";
-import { classNames } from "../../utils";
+import { useRefCallback, useStableCallback } from "../../hooks";
+import { classNames, IS_CLIENT, IS_SSR } from "../../utils";
 import { ProviderContext, ToastContext } from "../internal/context";
 import type { CloseMode } from "../types";
 
@@ -39,14 +39,13 @@ export function useCreate() {
     );
 
     // Handlers
-    const scheduleClose = useEvent((mode: CloseMode) => {
+    const scheduleClose = useStableCallback((mode: CloseMode) => {
         ctx.close(toast.id, mode);
 
-        if (typeof window !== "undefined")
-            window.clearInterval(intervalRef.current);
+        if (IS_CLIENT) window.clearInterval(intervalRef.current);
     });
 
-    const onTick = useEvent(() => {
+    const onTick = useStableCallback(() => {
         if (progress >= 100) {
             scheduleClose("timer");
         } else if (!loading && !paused && isAlive) {
@@ -56,7 +55,7 @@ export function useCreate() {
         }
     });
 
-    const onClick = useEvent(() => {
+    const onClick = useStableCallback(() => {
         if (loading || !isAlive) return;
 
         if (typeof toast.options.onClick === "function") {
@@ -71,11 +70,11 @@ export function useCreate() {
         }
     });
 
-    const onMouseEnter = useEvent(() => {
+    const onMouseEnter = useStableCallback(() => {
         if (isAlive && toast.mode !== "sticky") setPaused(true);
     });
 
-    const onMouseLeave = useEvent(() => {
+    const onMouseLeave = useStableCallback(() => {
         if (isAlive && toast.mode !== "sticky") setPaused(false);
     });
 
@@ -94,13 +93,14 @@ export function useCreate() {
 
     // Lifecycle
     useEffect(() => {
-        if (typeof window !== "undefined" && toast.isAutoClosing) {
+        if (IS_SSR) return;
+
+        if (toast.isAutoClosing) {
             intervalRef.current = setInterval(onTick, 10);
         }
 
         return () => {
-            if (typeof window !== "undefined")
-                clearInterval(intervalRef.current);
+            clearInterval(intervalRef.current);
         };
     });
 

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { IS_SSR } from "../utils";
 
 const query = "screen and (min-width: 1024px)";
 
@@ -9,13 +10,12 @@ const query = "screen and (min-width: 1024px)";
  * @returns True when the media query matches, otherwise false.
  */
 export function useIsDesktop(): boolean {
-    const [matches, setMatches] = useState(() => {
-        if (typeof window === "undefined") return false;
-        return window.matchMedia(query).matches;
-    });
+    const [matches, setMatches] = useState(() =>
+        IS_SSR ? false : window.matchMedia(query).matches
+    );
 
     useEffect(() => {
-        if (typeof window === "undefined") return;
+        if (IS_SSR) return;
 
         const mql = window.matchMedia(query);
         const handler = () => setMatches(mql.matches);

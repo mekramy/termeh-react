@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
-import { useEvent } from "./useEvent";
+import { IS_SSR } from "../utils";
+import { useStableCallback } from "./useStableCallback";
 
 /**
  * Registers global keyboard shortcuts and executes a handler when matched.
@@ -31,11 +32,11 @@ export function useShortcut(
     );
 
     // Stats
-    const handlerFn = useEvent(handler);
+    const handlerFn = useStableCallback(handler);
 
     // Side effects
     useEffect(() => {
-        if (typeof window === "undefined") return;
+        if (IS_SSR) return;
 
         const listener = (e: KeyboardEvent) => {
             for (const sc of shortcuts.current) {

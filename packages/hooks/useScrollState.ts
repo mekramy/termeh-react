@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from "react";
+import { getScrollState, type ScrollState } from "../utils";
 import { useIsomorphicLayoutEffect } from "./shared";
 
 /**
@@ -12,21 +13,31 @@ import { useIsomorphicLayoutEffect } from "./shared";
  */
 type ScrollObserver = "scroll" | "resize" | "mutation";
 
-/** Options for the useScroll composable. */
+/** Options for the useScrollState hook. */
 interface ScrollStateOptions {
+    /** Threshold in pixels for edge detection (default: 0). */
     threshold?: number;
+    /** Which observers should be attached (default: all). */
     observers?: ScrollObserver[];
 }
 
 /**
- * A composable to track the scroll status of a DOM element in all four
+ * A React hook to track the scroll status of a DOM element in all four
  * directions (Top, Bottom, Left, Right). It uses native events and observers
  * (Resize/Mutation) for robustness and accurate state tracking.
  *
- * @param element - A TemplateRef or Ref to the scrollable HTML element.
+ * @example
+ *     ```tsx
+ *     const ref = useRef<HTMLDivElement>(null);
+ *     const scrollState = useScrollState(ref.current, { threshold: 5 });
+ *
+ *     return <div ref={ref}> ... </div>;
+ *     ```;
+ *
+ * @param element - A reference to the scrollable HTML element.
  * @param options - Configuration options for the scroll state and observers.
- * @returns An object containing comprehensive reactive scroll state properties
- *   and a RefCallback to attach to scrollable element.
+ * @returns An object containing the current scroll state and an `update`
+ *   function.
  */
 export function useScrollState<T extends HTMLElement>(
     element: T | null,
@@ -34,49 +45,20 @@ export function useScrollState<T extends HTMLElement>(
         threshold = 0,
         observers = ["scroll", "resize", "mutation"],
     }: ScrollStateOptions = {}
-) {
+): ScrollState & { update: () => void } {
+    // Reference to the animation frame ID
     const rafRef = useRef<number | null>(null);
 
-    const [state, setState] = useState({
-        x: 0,
-        y: 0,
+    // State for the scroll position
+    const [state, setState] = useState<ScrollState>(() => getEmptyState());
 
-        isScrollableX: false,
-        isScrollableY: false,
-
-        isAtTop: true,
-        isAtBottom: true,
-        isAtLeft: true,
-        isAtRight: true,
-
-        hasScrollTop: false,
-        hasScrollBottom: false,
-        hasScrollLeft: false,
-        hasScrollRight: false,
-    });
-
+    // Update function to compute and set the scroll state
     const update = useCallback(() => {
         if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
 
         if (!element) {
             setState((prev) => {
-                const next = {
-                    x: 0,
-                    y: 0,
-
-                    isScrollableX: false,
-                    isScrollableY: false,
-
-                    isAtTop: true,
-                    isAtBottom: true,
-                    isAtLeft: true,
-                    isAtRight: true,
-
-                    hasScrollTop: false,
-                    hasScrollBottom: false,
-                    hasScrollLeft: false,
-                    hasScrollRight: false,
-                };
+                const next = getEmptyState();
 
                 return Object.keys(next).every(
                     (k) =>
@@ -91,57 +73,21 @@ export function useScrollState<T extends HTMLElement>(
         }
 
         rafRef.current = requestAnimationFrame(() => {
-            const {
-                scrollTop,
-                scrollHeight,
-                clientHeight,
-                scrollLeft,
-                scrollWidth,
-                clientWidth,
-            } = element;
+            const next = getScrollState(element, threshold);
 
-            const scrollableX = scrollWidth > clientWidth;
-            const scrollableY = scrollHeight > clientHeight;
-
-            const atTop = scrollTop <= threshold;
-            const atBottom =
-                scrollTop + clientHeight >= scrollHeight - threshold;
-
-            const atLeft = scrollLeft <= threshold;
-            const atRight = scrollLeft + clientWidth >= scrollWidth - threshold;
-
-            setState((prev) => {
-                const next = {
-                    x: scrollLeft,
-                    y: scrollTop,
-
-                    isScrollableX: scrollableX,
-                    isScrollableY: scrollableY,
-
-                    isAtTop: scrollableY ? atTop : true,
-                    isAtBottom: scrollableY ? atBottom : true,
-
-                    isAtLeft: scrollableX ? atLeft : true,
-                    isAtRight: scrollableX ? atRight : true,
-
-                    hasScrollTop: scrollableY && !atTop,
-                    hasScrollBottom: scrollableY && !atBottom,
-
-                    hasScrollLeft: scrollableX && !atLeft,
-                    hasScrollRight: scrollableX && !atRight,
-                };
-
-                return Object.keys(next).every(
+            setState((prev) =>
+                Object.keys(next).every(
                     (k) =>
-                        prev[k as keyof typeof prev] ===
-                        next[k as keyof typeof next]
+                        prev[k as keyof ScrollState] ===
+                        next[k as keyof ScrollState]
                 )
                     ? prev
-                    : next;
-            });
+                    : next
+            );
         });
     }, [element, threshold]);
 
+    // This ensures that the scroll state is recalculated whenever the element or threshold changes.
     useIsomorphicLayoutEffect(() => {
         update();
     }, [update]);
@@ -189,4 +135,9 @@ export function useScrollState<T extends HTMLElement>(
         }),
         [state, update]
     );
+}
+
+// Returns an empty scroll state for a non-scrollable element (used for initialization).
+function getEmptyState(): ScrollState {
+    return getScrollState(document.createElement("div"));
 }

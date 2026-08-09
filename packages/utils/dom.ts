@@ -1,3 +1,5 @@
+import type { ScrollState } from "./type";
+
 /**
  * Retrieves the `content` attribute of a `<meta>` tag with the given name.
  *
@@ -69,4 +71,58 @@ export async function copyToClipboard(data: string): Promise<void> {
  */
 export function classNames<T = unknown>(...classes: T[]): string {
     return classes.filter(Boolean).join(" ");
+}
+
+/**
+ * Computes the scroll state of a given HTMLElement.
+ *
+ * This function works across all devices (desktop, tablet, mobile) and provides
+ * detailed information about the scroll position. A threshold can be specified
+ * to avoid strict zero comparisons.
+ *
+ * @example
+ *     ```ts
+ *     const container = document.getElementById("myContainer")!;
+ *     const state = getScrollState(container, 5); // 5px threshold
+ *     console.log(state.isBottomEdgeReached);
+ *     ```;
+ *
+ * @param element - The HTMLElement to evaluate.
+ * @param threshold - Optional threshold in pixels for edge detection (default:
+ *   0).
+ * @returns A `ScrollState` object describing the current scroll status.
+ */
+export function getScrollState(
+    element: HTMLElement,
+    threshold: number = 0
+): ScrollState {
+    const {
+        scrollLeft,
+        scrollTop,
+        scrollWidth,
+        scrollHeight,
+        clientWidth,
+        clientHeight,
+    } = element;
+
+    const maxScrollLeft = Math.max(0, scrollWidth - clientWidth);
+    const maxScrollTop = Math.max(0, scrollHeight - clientHeight);
+
+    return {
+        scrollLeft,
+        scrollTop,
+
+        canScrollHorizontally: scrollWidth > clientWidth,
+        canScrollVertically: scrollHeight > clientHeight,
+
+        isTopEdgeReached: scrollTop <= threshold,
+        isBottomEdgeReached: scrollTop >= maxScrollTop - threshold,
+        isLeftEdgeReached: scrollLeft <= threshold,
+        isRightEdgeReached: scrollLeft >= maxScrollLeft - threshold,
+
+        canScrollUp: scrollTop > threshold,
+        canScrollDown: scrollTop < maxScrollTop - threshold,
+        canScrollLeft: scrollLeft > threshold,
+        canScrollRight: scrollLeft < maxScrollLeft - threshold,
+    };
 }

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { IS_SSR } from "../utils";
 import type { ViewportMetrics } from "./shared";
 
 /**
@@ -13,7 +14,7 @@ export function useVisualViewport(): ViewportMetrics {
         const handleChange = () => setViewport(getViewport());
         handleChange();
 
-        if (typeof window === "undefined") return;
+        if (IS_SSR) return;
         else if (window.visualViewport) {
             window.visualViewport.addEventListener("resize", handleChange);
         }
@@ -37,15 +38,13 @@ export function useVisualViewport(): ViewportMetrics {
 }
 
 function getViewport() {
-    if (typeof window === "undefined") {
+    if (IS_SSR) {
         return {
             width: 0,
             height: 0,
             scale: 1,
         };
-    }
-
-    if (window.visualViewport) {
+    } else if (window.visualViewport) {
         return {
             width: window.visualViewport.width,
             height: window.visualViewport.height,
