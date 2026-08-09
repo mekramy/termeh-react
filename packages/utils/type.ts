@@ -194,3 +194,27 @@ export interface ScrollState {
     /** Whether the right edge has been reached (within threshold) */
     isRightEdgeReached: boolean;
 }
+
+/** Represents the bounding rectangle of an element. */
+export interface ElementRect {
+    x: number;
+    y: number;
+
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+
+    width: number;
+    height: number;
+
+    readonly centerX: number;
+    readonly centerY: number;
+}
+
+/** Metrics of the visual viewport. */
+export interface ViewportMetrics {
+    width: number;
+    height: number;
+    scale: number;
+}

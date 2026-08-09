@@ -1,5 +1,5 @@
 import { useCallback, useState, type RefCallback } from "react";
-import { useIsomorphicLayoutEffect } from "./shared";
+import { useIsomorphicLayoutEffect } from "./useIsomorphicLayoutEffect";
 
 /**
  * A universal ref hook that tracks a DOM node or any custom ref target

@@ -1,4 +1,5 @@
-import type { ScrollState } from "./type";
+import { IS_SSR } from "./constants";
+import type { ElementRect, ScrollState, ViewportMetrics } from "./type";
 
 /**
  * Retrieves the `content` attribute of a `<meta>` tag with the given name.
@@ -115,14 +116,70 @@ export function getScrollState(
         canScrollHorizontally: scrollWidth > clientWidth,
         canScrollVertically: scrollHeight > clientHeight,
 
-        isTopEdgeReached: scrollTop <= threshold,
-        isBottomEdgeReached: scrollTop >= maxScrollTop - threshold,
-        isLeftEdgeReached: scrollLeft <= threshold,
-        isRightEdgeReached: scrollLeft >= maxScrollLeft - threshold,
-
         canScrollUp: scrollTop > threshold,
         canScrollDown: scrollTop < maxScrollTop - threshold,
         canScrollLeft: scrollLeft > threshold,
         canScrollRight: scrollLeft < maxScrollLeft - threshold,
+
+        isTopEdgeReached: scrollTop <= threshold,
+        isBottomEdgeReached: scrollTop >= maxScrollTop - threshold,
+        isLeftEdgeReached: scrollLeft <= threshold,
+        isRightEdgeReached: scrollLeft >= maxScrollLeft - threshold,
+    };
+}
+
+/**
+ * Computes the bounding rectangle of a given HTMLElement.
+ *
+ * @param element - The HTMLElement to evaluate.
+ * @returns An `ElementRect` object describing the current bounding box.
+ */
+export function getElementBounding(element: HTMLElement): ElementRect {
+    const rect = element.getBoundingClientRect();
+
+    return {
+        x: rect.x,
+        y: rect.y,
+
+        top: rect.top,
+        right: rect.right,
+        bottom: rect.bottom,
+        left: rect.left,
+
+        width: rect.width,
+        height: rect.height,
+
+        get centerX() {
+            return rect.left + rect.width / 2;
+        },
+
+        get centerY() {
+            return rect.top + rect.height / 2;
+        },
+    };
+}
+
+/**
+ * Computes the current visual viewport metrics.
+ *
+ * @returns The viewport width, height, and scale.
+ */
+export function getViewportMetrics(): ViewportMetrics {
+    if (IS_SSR) {
+        return { width: 0, height: 0, scale: 1 };
+    }
+
+    if (window.visualViewport) {
+        return {
+            width: window.visualViewport.width,
+            height: window.visualViewport.height,
+            scale: window.visualViewport.scale,
+        };
+    }
+
+    return {
+        width: window.innerWidth,
+        height: window.innerHeight,
+        scale: 1,
     };
 }

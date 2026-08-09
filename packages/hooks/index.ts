@@ -1,4 +1,3 @@
-export * from "./shared";
 export * from "./useAutoClear";
 export * from "./useAutoFocus";
 export * from "./useAutoSelect";
@@ -10,6 +9,7 @@ export * from "./useDebounceCallback";
 export * from "./useDeepMemoize";
 export * from "./useDeepMemoizeLatest";
 export * from "./useElementBounding";
+export * from "./useIsomorphicLayoutEffect";
 export * from "./useLatest";
 export * from "./useMotionPan";
 export * from "./useMotionPanSnap";

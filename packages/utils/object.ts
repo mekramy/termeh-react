@@ -28,3 +28,19 @@ export function deepClone<T>(obj: T): T {
     }
     return cloned as T;
 }
+
+/**
+ * Returns the previous object if all keys match the next object, otherwise
+ * returns the next object.
+ *
+ * Useful for React state updates to avoid unnecessary re-renders.
+ */
+export function retainOrReplace<T>(prev: T, next: T): T {
+    if (typeof next !== "object" || !next) return prev;
+
+    return Object.keys(next).every(
+        (k) => prev[k as keyof typeof prev] === next[k as keyof typeof next]
+    )
+        ? prev
+        : next;
+}

@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from "react";
-import { getScrollState, type ScrollState } from "../utils";
-import { useIsomorphicLayoutEffect } from "./shared";
+import { getScrollState, retainOrReplace, type ScrollState } from "../utils";
+import { useIsomorphicLayoutEffect } from "./useIsomorphicLayoutEffect";
 
 /**
  * Defines the types of observers that can be used to trigger scroll state
@@ -46,10 +46,7 @@ export function useScrollState<T extends HTMLElement>(
         observers = ["scroll", "resize", "mutation"],
     }: ScrollStateOptions = {}
 ): ScrollState & { update: () => void } {
-    // Reference to the animation frame ID
     const rafRef = useRef<number | null>(null);
-
-    // State for the scroll position
     const [state, setState] = useState<ScrollState>(() => getEmptyState());
 
     // Update function to compute and set the scroll state
@@ -57,32 +54,13 @@ export function useScrollState<T extends HTMLElement>(
         if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
 
         if (!element) {
-            setState((prev) => {
-                const next = getEmptyState();
-
-                return Object.keys(next).every(
-                    (k) =>
-                        prev[k as keyof typeof prev] ===
-                        next[k as keyof typeof next]
-                )
-                    ? prev
-                    : next;
-            });
-
+            setState((prev) => retainOrReplace(prev, getEmptyState()));
             return;
         }
 
         rafRef.current = requestAnimationFrame(() => {
-            const next = getScrollState(element, threshold);
-
             setState((prev) =>
-                Object.keys(next).every(
-                    (k) =>
-                        prev[k as keyof ScrollState] ===
-                        next[k as keyof ScrollState]
-                )
-                    ? prev
-                    : next
+                retainOrReplace(prev, getScrollState(element, threshold))
             );
         });
     }, [element, threshold]);

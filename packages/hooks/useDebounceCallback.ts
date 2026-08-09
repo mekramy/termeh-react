@@ -1,4 +1,5 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
+import { useStableCallback } from "./useStableCallback";
 
 /**
  * A React hook that debounces a value and executes a callback after the delay.
@@ -33,16 +34,11 @@ export function useDebounceCallback<T>(
     delay: number,
     callback: (v: T) => void
 ) {
-    const callbackRef = useRef(callback);
-
-    // Always keep the latest callback
-    useEffect(() => {
-        callbackRef.current = callback;
-    }, [callback]);
+    const callbackFn = useStableCallback(callback);
 
     // Run Debounce
     useEffect(() => {
-        const handler = setTimeout(() => callbackRef.current(value), delay);
+        const handler = setTimeout(() => callbackFn(value), delay);
         return () => clearTimeout(handler);
-    }, [value, delay]);
+    }, [value, delay, callbackFn]);
 }

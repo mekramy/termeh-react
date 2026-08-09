@@ -1,4 +1,4 @@
-import { useIsomorphicLayoutEffect } from "./shared";
+import { useIsomorphicLayoutEffect } from "./useIsomorphicLayoutEffect";
 
 /** Element type that supports focus. */
 type FocusableElement = Pick<HTMLElement, "focus">;

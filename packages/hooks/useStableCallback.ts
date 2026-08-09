@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useCallback, useRef } from "react";
-import { useIsomorphicLayoutEffect } from "./shared";
+import { useIsomorphicLayoutEffect } from "./useIsomorphicLayoutEffect";
 
 /**
  * Returns a stable callback that always calls the latest version of fn.

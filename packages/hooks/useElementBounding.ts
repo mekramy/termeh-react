@@ -1,5 +1,12 @@
-import { useCallback, useMemo, useState } from "react";
-import { useIsomorphicLayoutEffect } from "./shared";
+"use client";
+
+import { useCallback, useMemo, useRef, useState } from "react";
+import {
+    getElementBounding,
+    retainOrReplace,
+    type ElementRect,
+} from "../utils";
+import { useIsomorphicLayoutEffect } from "./useIsomorphicLayoutEffect";
 
 export interface UseElementBoundingOptions {
     /**
@@ -23,25 +30,15 @@ export interface UseElementBoundingOptions {
     windowScroll?: boolean;
 }
 
-export interface ElementRect {
-    x: number;
-    y: number;
-
-    top: number;
-    right: number;
-    bottom: number;
-    left: number;
-
-    width: number;
-    height: number;
-
-    readonly centerX: number;
-    readonly centerY: number;
-
-    update: () => void;
-}
-
-/** Reactive bounding box of an HTML element. */
+/**
+ * A React hook to track the bounding rectangle of a DOM element. It uses
+ * ResizeObserver, MutationObserver, and window events for robustness.
+ *
+ * @param element - A reference to the HTML element.
+ * @param options - Configuration options for reset and observers.
+ * @returns An object containing the current bounding rect and an `update`
+ *   function.
+ */
 export function useElementBounding<T extends HTMLElement>(
     element: T | null,
     {
@@ -49,85 +46,28 @@ export function useElementBounding<T extends HTMLElement>(
         windowResize = true,
         windowScroll = true,
     }: UseElementBoundingOptions = {}
-) {
-    const [rect, setRect] = useState({
-        x: 0,
-        y: 0,
+): ElementRect & { update: () => void } {
+    const rafRef = useRef<number | null>(null);
+    const [rect, setRect] = useState<ElementRect>(() => getEmptyBounding());
 
-        top: 0,
-        right: 0,
-        bottom: 0,
-        left: 0,
-
-        width: 0,
-        height: 0,
-    });
-
+    // Update function to compute and set the element bounding
     const update = useCallback(() => {
+        if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+
         if (!element) {
-            if (reset) {
-                setRect((prev) => {
-                    if (
-                        prev.x === 0 &&
-                        prev.y === 0 &&
-                        prev.top === 0 &&
-                        prev.right === 0 &&
-                        prev.bottom === 0 &&
-                        prev.left === 0 &&
-                        prev.width === 0 &&
-                        prev.height === 0
-                    ) {
-                        return prev;
-                    }
-
-                    return {
-                        x: 0,
-                        y: 0,
-
-                        top: 0,
-                        right: 0,
-                        bottom: 0,
-                        left: 0,
-
-                        width: 0,
-                        height: 0,
-                    };
-                });
-            }
-
+            if (reset)
+                setRect((prev) => retainOrReplace(prev, getEmptyBounding()));
             return;
         }
 
-        const next = element.getBoundingClientRect();
-        setRect((prev) => {
-            if (
-                prev.x === next.x &&
-                prev.y === next.y &&
-                prev.top === next.top &&
-                prev.right === next.right &&
-                prev.bottom === next.bottom &&
-                prev.left === next.left &&
-                prev.width === next.width &&
-                prev.height === next.height
-            ) {
-                return prev;
-            }
-
-            return {
-                x: next.x,
-                y: next.y,
-
-                top: next.top,
-                right: next.right,
-                bottom: next.bottom,
-                left: next.left,
-
-                width: next.width,
-                height: next.height,
-            };
+        rafRef.current = requestAnimationFrame(() => {
+            setRect((prev) =>
+                retainOrReplace(prev, getElementBounding(element))
+            );
         });
     }, [element, reset]);
 
+    // This ensures that the bounding rect is recalculated whenever the element changes.
     useIsomorphicLayoutEffect(() => {
         update();
     }, [update]);
@@ -171,17 +111,27 @@ export function useElementBounding<T extends HTMLElement>(
     return useMemo(
         () => ({
             ...rect,
-
-            get centerX() {
-                return rect.left + rect.width / 2;
-            },
-
-            get centerY() {
-                return rect.top + rect.height / 2;
-            },
-
             update,
         }),
         [rect, update]
     );
+}
+
+function getEmptyBounding(): ElementRect {
+    return {
+        x: 0,
+        y: 0,
+        top: 0,
+        right: 0,
+        bottom: 0,
+        left: 0,
+        width: 0,
+        height: 0,
+        get centerX() {
+            return 0;
+        },
+        get centerY() {
+            return 0;
+        },
+    };
 }

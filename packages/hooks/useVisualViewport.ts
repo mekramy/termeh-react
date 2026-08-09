@@ -1,60 +1,40 @@
-import { useEffect, useState } from "react";
-import { IS_SSR } from "../utils";
-import type { ViewportMetrics } from "./shared";
+import { useEffect, useRef, useState } from "react";
+import { getViewportMetrics, IS_SSR, type ViewportMetrics } from "../utils";
 
 /**
- * Returns the visual viewport dimensions and scale.
+ * A React hook to track the visual viewport dimensions and scale.
  *
- * @returns The visual viewport dimensions and scale.
+ * @returns The current viewport metrics and updates on resize.
  */
 export function useVisualViewport(): ViewportMetrics {
-    const [viewport, setViewport] = useState(getViewport);
+    const rafRef = useRef<number | null>(null);
+    const [viewport, setViewport] = useState(getViewportMetrics);
 
     useEffect(() => {
-        const handleChange = () => setViewport(getViewport());
-        handleChange();
-
         if (IS_SSR) return;
-        else if (window.visualViewport) {
-            window.visualViewport.addEventListener("resize", handleChange);
-        }
 
-        window.addEventListener("resize", handleChange);
-        if (window.visualViewport)
-            window.visualViewport.addEventListener("resize", handleChange);
-        else window.addEventListener("resize", handleChange);
+        const update = () => {
+            if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+
+            rafRef.current = requestAnimationFrame(() => {
+                setViewport(getViewportMetrics());
+            });
+        };
+
+        update();
+
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener("resize", update);
+            window.visualViewport.addEventListener("scroll", update);
+        } else window.addEventListener("resize", update);
 
         return () => {
-            if (window.visualViewport)
-                window.visualViewport.removeEventListener(
-                    "resize",
-                    handleChange
-                );
-            else window.removeEventListener("resize", handleChange);
+            if (window.visualViewport) {
+                window.visualViewport.removeEventListener("resize", update);
+                window.visualViewport.removeEventListener("scroll", update);
+            } else window.removeEventListener("resize", update);
         };
     }, []);
 
     return viewport;
-}
-
-function getViewport() {
-    if (IS_SSR) {
-        return {
-            width: 0,
-            height: 0,
-            scale: 1,
-        };
-    } else if (window.visualViewport) {
-        return {
-            width: window.visualViewport.width,
-            height: window.visualViewport.height,
-            scale: window.visualViewport.scale,
-        };
-    }
-
-    return {
-        width: window.innerWidth,
-        height: window.innerHeight,
-        scale: 1,
-    };
 }
