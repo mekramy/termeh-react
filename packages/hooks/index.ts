@@ -12,6 +12,7 @@ export * from "./useElementBounding";
 export * from "./useIsomorphicLayoutEffect";
 export * from "./useLatest";
 export * from "./useMotionPan";
+export * from "./useMotionPanScroll";
 export * from "./useMotionPanSnap";
 export * from "./useRefCallback";
 export * from "./useRefCallbackAdapter";
