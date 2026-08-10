@@ -21,4 +21,5 @@ export * from "./useStableCallback";
 export * from "./useStateRef";
 export * from "./useStorage";
 export * from "./useTimer";
+export * from "./useTouchAction";
 export * from "./useVisualViewport";
