@@ -3,13 +3,13 @@ import {
     useMotionValue,
     useTransform,
     type AnimationPlaybackControls,
-    type MotionStyle,
     type ValueAnimationTransition,
 } from "motion/react";
 import { useCallback, useEffect, useRef } from "react";
 import { useDeepMemoizeLatest } from "./useDeepMemoizeLatest";
 import { useLatest } from "./useLatest";
-import { useMotionPan, type PanInfo, type PointerType } from "./useMotionPan";
+import { type PanInfo, type PointerType } from "./useMotionPan";
+import { useMotionPanScroll } from "./useMotionPanScroll";
 import { useStateRef } from "./useStateRef";
 
 const defaultTransition: ValueAnimationTransition = {
@@ -48,6 +48,13 @@ export interface UseMotionPanSnapOptions {
     elastic?: boolean;
 
     /**
+     * Disable dragging
+     *
+     * @default false
+     */
+    disabled?: boolean;
+
+    /**
      * Threshold (0..1) within a segment to snap to the next point. 0.2 means
      * you need to drag 20% toward the next point to snap there.
      *
@@ -64,13 +71,6 @@ export interface UseMotionPanSnapOptions {
     velocityThreshold?: number;
 
     /**
-     * Allow text selection while dragging
-     *
-     * @default false
-     */
-    textSelect?: boolean;
-
-    /**
      * Allowed pointer types
      *
      * @default all
@@ -80,8 +80,12 @@ export interface UseMotionPanSnapOptions {
     /** Animation used when snapping to a point */
     transition?: ValueAnimationTransition;
 
-    /** Disable dragging */
-    disabled?: () => boolean;
+    /**
+     * Optional scrollable element to calculate touch-action for.
+     *
+     * @default null
+     */
+    scrollableEl?: HTMLElement | null;
 
     /** Called when snapped to a specific point (after animation settles) */
     onSnap?: (index: number, value: number) => void;
@@ -89,46 +93,40 @@ export interface UseMotionPanSnapOptions {
     /**
      * Called when a drag gesture is cancelled and snaps back to the origin.
      *
-     * @param info.isDisabled - `true` if cancelled because `disabled()`
-     *   returned true
      * @param info.snap - The origin snap index
      * @param info.nextSnap - The predicted snap index at the time of
      *   cancellation
      */
-    onCancel?: (info: {
-        isDisabled: boolean;
-        snap: number;
-        nextSnap: number;
-    }) => void;
+    onCancel?: (snap: number, nextSnap: number) => void;
 }
 
 export function useMotionPanSnap({
     axis,
-    points: rawPoints,
-    initial = 0,
+    points: _points,
+    initial: _initial = 0,
     elastic = true,
+    disabled = false,
     threshold = 0.3,
     velocityThreshold = 700,
-    textSelect = false,
     pointerTypes = ["mouse", "touch", "pen"],
     transition = defaultTransition,
-    disabled,
+    scrollableEl = null,
     onSnap,
     onCancel,
 }: UseMotionPanSnapOptions) {
     const [points, pointsRef] = useDeepMemoizeLatest(
-        [...rawPoints].sort((a, b) => a - b)
+        [..._points].sort((a, b) => a - b)
     );
-    const initialState = Math.max(0, Math.min(initial, points.length - 1));
-    const [snap, setSnap, snapRef] = useStateRef(initialState);
-    const [nextSnap, setNextSnap, nextSnapRef] = useStateRef(initialState);
+    const initial = Math.max(0, Math.min(_initial, points.length - 1));
+    const [snap, setSnap, snapRef] = useStateRef(initial);
+    const [nextSnap, setNextSnap, nextSnapRef] = useStateRef(initial);
     const optionsRef = useLatest({
         axis,
         elastic,
+        disabled,
         threshold,
         velocityThreshold,
         transition,
-        disabled,
         onSnap,
         onCancel,
     });
@@ -136,12 +134,12 @@ export function useMotionPanSnap({
     const mountedRef = useRef(true);
     const actionIdRef = useRef(0);
     const animationsRef = useRef<AnimationPlaybackControls[]>([]);
-    const startValueRef = useRef(points[initialState] ?? 0);
+    const startValueRef = useRef(points[initial] ?? 0);
     const isDraggingRef = useRef(false);
 
     // Motion values
-    const x = useMotionValue(axis === "x" ? (points[initialState] ?? 0) : 0);
-    const y = useMotionValue(axis === "y" ? (points[initialState] ?? 0) : 0);
+    const x = useMotionValue(axis === "x" ? (points[initial] ?? 0) : 0);
+    const y = useMotionValue(axis === "y" ? (points[initial] ?? 0) : 0);
     const progress = useTransform(() => {
         const points = pointsRef.current;
         const { axis } = optionsRef.current;
@@ -355,8 +353,10 @@ export function useMotionPanSnap({
     );
 
     // APIs
-    const snapTo = useCallback(
+    const snapToInternal = useCallback(
         (index: number, animate: boolean = true) => {
+            const { onSnap } = optionsRef.current;
+
             const clamped = safeIndex(index);
             const point = pointsRef.current[clamped];
             if (point === undefined) return;
@@ -367,51 +367,58 @@ export function useMotionPanSnap({
 
             animateTo(point, animate, () => {
                 if (clamped !== prevSnap) {
-                    optionsRef.current.onSnap?.(clamped, point);
+                    onSnap?.(clamped, point);
                 }
             });
         },
         [
-            safeIndex,
             pointsRef,
             optionsRef,
             snapRef,
+            safeIndex,
             setSnap,
             setNextSnap,
             animateTo,
         ]
     );
 
+    const snapTo = useCallback(
+        (index: number, animate: boolean = true) => {
+            const { disabled } = optionsRef.current;
+            if (disabled) {
+                isDraggingRef.current = false;
+                return;
+            }
+
+            return snapToInternal(index, animate);
+        },
+        [optionsRef, snapToInternal]
+    );
+
     const reset = useCallback(() => {
-        snapTo(initialState);
-    }, [initialState, snapTo]);
+        snapTo(initial);
+    }, [initial, snapTo]);
 
     // Stable handlers
     const handleStart = useCallback(() => {
         const { axis, disabled } = optionsRef.current;
-        if (disabled?.()) {
+        if (disabled) {
             isDraggingRef.current = false;
-            snapTo(snapRef.current);
             return;
         }
 
         isDraggingRef.current = true;
         stopAnimations();
         startValueRef.current = axis === "x" ? x.get() : y.get();
-    }, [stopAnimations, x, y, optionsRef, snapRef, snapTo]);
+    }, [x, y, optionsRef, stopAnimations]);
 
     const handleMove = useCallback(
         (info: PanInfo) => {
-            const { axis, disabled, onCancel } = optionsRef.current;
+            const { axis, disabled } = optionsRef.current;
 
-            if (disabled?.()) {
+            if (disabled) {
                 isDraggingRef.current = false;
-                onCancel?.({
-                    isDisabled: true,
-                    snap: snapRef.current,
-                    nextSnap: nextSnapRef.current,
-                });
-                snapTo(snapRef.current);
+                snapToInternal(snapRef.current);
                 return;
             }
 
@@ -438,7 +445,7 @@ export function useMotionPanSnap({
             setNextSnap,
             applyElastic,
             predictNextSnap,
-            snapTo,
+            snapToInternal,
         ]
     );
 
@@ -447,13 +454,8 @@ export function useMotionPanSnap({
             const { axis, disabled, onCancel } = optionsRef.current;
             isDraggingRef.current = false;
 
-            if (disabled?.()) {
-                onCancel?.({
-                    isDisabled: true,
-                    snap: snapRef.current,
-                    nextSnap: nextSnapRef.current,
-                });
-                snapTo(snapRef.current);
+            if (disabled) {
+                snapToInternal(snapRef.current);
                 return;
             }
 
@@ -465,50 +467,37 @@ export function useMotionPanSnap({
                 targetIndex === snapRef.current &&
                 !isElasticOverscroll(current)
             ) {
-                onCancel?.({
-                    isDisabled: false,
-                    snap: snapRef.current,
-                    nextSnap: nextSnapRef.current,
-                });
+                onCancel?.(snapRef.current, nextSnapRef.current);
             }
 
-            snapTo(targetIndex);
+            snapToInternal(targetIndex);
         },
         [
-            snapTo,
             x,
             y,
             optionsRef,
             snapRef,
             nextSnapRef,
+            snapToInternal,
             findNearestSnap,
             isElasticOverscroll,
         ]
     );
 
-    const handlers = useMotionPan({
-        pointerTypes,
-        onStart: handleStart,
-        onMove: handleMove,
-        onEnd: handleEnd,
-    });
-
-    // Generate style
-    const touchAction = axis === "x" ? "pan-y" : "pan-x";
-    const textSelection: MotionStyle = textSelect
-        ? {}
-        : {
-              userSelect: "none",
-              msUserSelect: "none",
-              MozUserSelect: "none",
-              WebkitUserSelect: "none",
-          };
-    const style: MotionStyle = {
-        x,
-        y,
-        touchAction,
-        ...textSelection,
-    };
+    const { touchAction, onPan, onPanStart, onPanEnd } = useMotionPanScroll(
+        scrollableEl,
+        {
+            axis,
+            pointerTypes,
+            allowUpEdgeSwipe: axis === "y",
+            allowDownEdgeSwipe: axis === "y",
+            allowLeftEdgeSwipe: axis === "x",
+            allowRightEdgeSwipe: axis === "x",
+            onStart: handleStart,
+            onMove: handleMove,
+            onEnd: handleEnd,
+        }
+    );
 
     // Lifecycle and resize sync
     useEffect(() => {
@@ -531,15 +520,15 @@ export function useMotionPanSnap({
         if (isDraggingRef.current) return;
 
         const { axis } = optionsRef.current;
-        const value = pointsRef.current[initialState];
+        const value = pointsRef.current[initial];
         if (value === undefined) return;
 
-        setSnap(initialState);
-        setNextSnap(initialState);
+        setSnap(initial);
+        setNextSnap(initial);
 
         if (axis === "x") x.set(value);
         else y.set(value);
-    }, [pointsRef, optionsRef, initialState, x, y, setSnap, setNextSnap]);
+    }, [pointsRef, optionsRef, initial, x, y, setSnap, setNextSnap]);
 
     useEffect(() => {
         return () => {
@@ -549,14 +538,18 @@ export function useMotionPanSnap({
     }, [stopAnimations]);
 
     return {
-        x,
-        y,
-        progress,
         snap,
         nextSnap,
+        progress,
+
+        x,
+        y,
+        touchAction,
+
         snapTo,
         reset,
-        handlers,
-        style,
+        onPan,
+        onPanStart,
+        onPanEnd,
     };
 }
