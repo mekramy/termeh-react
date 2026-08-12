@@ -1,5 +1,6 @@
 import {
     animate,
+    MotionValue,
     useMotionValue,
     useTransform,
     type AnimationPlaybackControls,
@@ -542,9 +543,9 @@ export function useMotionPanSnap({
         nextSnap,
         progress,
 
-        x,
-        y,
-        touchAction,
+        x: disabled ? new MotionValue(0) : x,
+        y: disabled ? new MotionValue(0) : y,
+        touchAction: disabled ? undefined : touchAction,
 
         snapTo,
         reset,
