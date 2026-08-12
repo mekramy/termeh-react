@@ -24,10 +24,11 @@ const defaultTransition: ValueAnimationTransition = {
     mass: 0.8,
 } as const;
 
-type FastActionContext = {
+type SnapCallbackContext = {
+    from: number;
+    to: number;
     velocity: number;
-    snap: number;
-    nextSnap: number;
+    fastSwipe: boolean;
     direction: PanDirection;
     pointerType: PointerType;
 };
@@ -71,7 +72,7 @@ export interface UseMotionPanSnapOptions {
      * Threshold (0..1) within a segment to snap to the next point. 0.2 means
      * you need to drag 20% toward the next point to snap there.
      *
-     * @default 0.4
+     * @default 0.3
      */
     threshold?: number;
 
@@ -108,6 +109,14 @@ export interface UseMotionPanSnapOptions {
      */
     scrollableEl?: HTMLElement | null;
 
+    /**
+     * Called to determine if a snap is allowed with swipe.
+     *
+     * @param ctx - The context of the snap gesture
+     * @returns True if the snap is allowed, false otherwise
+     */
+    swipeGuard?: (ctx: SnapCallbackContext) => boolean;
+
     /** Called when snapped to a specific point (after animation settles) */
     onSnap?: (index: number, value: number) => void;
 
@@ -124,10 +133,10 @@ export interface UseMotionPanSnapOptions {
      * Called when a fast swipe is detected. Return the snap index to snap to,
      * or undefined to ignore.
      *
-     * @param context - The context of the fast swipe gesture
+     * @param ctx - The context of the fast swipe gesture
      * @returns The snap index to snap to, or undefined to ignore
      */
-    onFastSwipe?: (context: FastActionContext) => number | undefined;
+    onFastSwipe?: (ctx: SnapCallbackContext) => number | undefined;
 }
 
 export function useMotionPanSnap({
@@ -136,12 +145,13 @@ export function useMotionPanSnap({
     initial: _initial = 0,
     elastic = true,
     disabled = false,
-    threshold = 0.4,
+    threshold = 0.3,
     velocityThreshold = 500,
     fastVelocityThreshold = 1000,
     pointerTypes = ["mouse", "touch", "pen"],
     transition = defaultTransition,
     scrollableEl = null,
+    swipeGuard,
     onSnap,
     onCancel,
     onFastSwipe,
@@ -160,6 +170,7 @@ export function useMotionPanSnap({
         velocityThreshold,
         fastVelocityThreshold,
         transition,
+        swipeGuard,
         onSnap,
         onCancel,
         onFastSwipe,
@@ -258,6 +269,35 @@ export function useMotionPanSnap({
             }
         },
         [x, y, optionsRef, stopAnimations]
+    );
+
+    const snapToInternal = useCallback(
+        (index: number, animate: boolean = true) => {
+            const { onSnap } = optionsRef.current;
+
+            const clamped = safeIndex(index);
+            const point = pointsRef.current[clamped];
+            if (point === undefined) return;
+
+            const prevSnap = snapRef.current;
+            setSnap(clamped);
+            setNextSnap(clamped);
+
+            animateTo(point, animate, () => {
+                if (clamped !== prevSnap) {
+                    onSnap?.(clamped, point);
+                }
+            });
+        },
+        [
+            pointsRef,
+            optionsRef,
+            snapRef,
+            safeIndex,
+            setSnap,
+            setNextSnap,
+            animateTo,
+        ]
     );
 
     const predictNextSnap = useCallback(
@@ -387,35 +427,6 @@ export function useMotionPanSnap({
     );
 
     // APIs
-    const snapToInternal = useCallback(
-        (index: number, animate: boolean = true) => {
-            const { onSnap } = optionsRef.current;
-
-            const clamped = safeIndex(index);
-            const point = pointsRef.current[clamped];
-            if (point === undefined) return;
-
-            const prevSnap = snapRef.current;
-            setSnap(clamped);
-            setNextSnap(clamped);
-
-            animateTo(point, animate, () => {
-                if (clamped !== prevSnap) {
-                    onSnap?.(clamped, point);
-                }
-            });
-        },
-        [
-            pointsRef,
-            optionsRef,
-            snapRef,
-            safeIndex,
-            setSnap,
-            setNextSnap,
-            animateTo,
-        ]
-    );
-
     const snapTo = useCallback(
         (index: number, animate: boolean = true) => {
             const { disabled } = optionsRef.current;
@@ -448,7 +459,7 @@ export function useMotionPanSnap({
 
     const handleMove = useCallback(
         (info: PanInfo) => {
-            const { axis, disabled } = optionsRef.current;
+            const { axis, disabled, swipeGuard } = optionsRef.current;
 
             if (disabled) {
                 isDraggingRef.current = false;
@@ -456,17 +467,32 @@ export function useMotionPanSnap({
                 return;
             }
 
-            const raw =
-                startValueRef.current +
-                (axis === "x" ? info.offset.x : info.offset.y);
-            const current = applyElastic(raw);
+            const offset = axis === "x" ? info.offset.x : info.offset.y;
+            const raw = startValueRef.current + offset;
+            const velocity = axis === "x" ? info.velocity.x : info.velocity.y;
+            const predicted = predictNextSnap(raw, velocity);
+
+            // Check swipeGuard
+            const isAllowed = swipeGuard
+                ? swipeGuard({
+                      from: snapRef.current,
+                      to: predicted,
+                      velocity: velocity,
+                      fastSwipe: false,
+                      direction: resolveDirection(axis, info.directions),
+                      pointerType: info.pointerType,
+                  })
+                : true;
+
+            // If snap is not allowed, apply elastic effect to show resistance
+            const current = isAllowed
+                ? applyElastic(raw)
+                : applyElastic(startValueRef.current + offset * 0.1);
 
             if (axis === "x") x.set(current);
             else y.set(current);
 
-            const velocity = axis === "x" ? info.velocity.x : info.velocity.y;
-            const predicted = predictNextSnap(current, velocity);
-            if (predicted !== nextSnapRef.current) {
+            if (isAllowed && predicted !== nextSnapRef.current) {
                 setNextSnap(predicted);
             }
         },
@@ -491,6 +517,7 @@ export function useMotionPanSnap({
                 onCancel,
                 fastVelocityThreshold,
                 onFastSwipe,
+                swipeGuard,
             } = optionsRef.current;
             isDraggingRef.current = false;
 
@@ -501,14 +528,35 @@ export function useMotionPanSnap({
 
             const current = axis === "x" ? x.get() : y.get();
             const velocity = axis === "x" ? info.velocity.x : info.velocity.y;
+            const fastSwipe =
+                Math.abs(velocity) > fastVelocityThreshold && !!onFastSwipe;
             const targetIndex = findNearestSnap(current, velocity);
 
+            // Check swipeGuard on end
+            const isAllowed = swipeGuard
+                ? swipeGuard({
+                      from: snapRef.current,
+                      to: targetIndex,
+                      velocity: velocity,
+                      fastSwipe,
+                      direction: resolveDirection(axis, info.directions),
+                      pointerType: info.pointerType,
+                  })
+                : true;
+
+            // If snap is not allowed, return to previous step
+            if (!isAllowed) {
+                snapToInternal(snapRef.current);
+                return;
+            }
+
             // Check for fast swipe
-            if (Math.abs(velocity) > fastVelocityThreshold && onFastSwipe) {
+            if (fastSwipe) {
                 const target = onFastSwipe({
+                    from: snapRef.current,
+                    to: targetIndex,
                     velocity: velocity,
-                    snap: snapRef.current,
-                    nextSnap: targetIndex,
+                    fastSwipe: true,
                     direction: resolveDirection(axis, info.directions),
                     pointerType: info.pointerType,
                 });
