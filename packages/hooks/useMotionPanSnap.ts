@@ -9,7 +9,11 @@ import {
 import { useCallback, useEffect, useRef } from "react";
 import { useDeepMemoizeLatest } from "./useDeepMemoizeLatest";
 import { useLatest } from "./useLatest";
-import { type PanInfo, type PointerType } from "./useMotionPan";
+import {
+    type PanDirection,
+    type PanInfo,
+    type PointerType,
+} from "./useMotionPan";
 import { useMotionPanScroll } from "./useMotionPanScroll";
 import { useStateRef } from "./useStateRef";
 
@@ -19,6 +23,14 @@ const defaultTransition: ValueAnimationTransition = {
     damping: 40,
     mass: 0.8,
 } as const;
+
+type FastActionContext = {
+    velocity: number;
+    snap: number;
+    nextSnap: number;
+    direction: PanDirection;
+    pointerType: PointerType;
+};
 
 export interface UseMotionPanSnapOptions {
     /** Which axis to drag on */
@@ -59,7 +71,7 @@ export interface UseMotionPanSnapOptions {
      * Threshold (0..1) within a segment to snap to the next point. 0.2 means
      * you need to drag 20% toward the next point to snap there.
      *
-     * @default 0.3
+     * @default 0.4
      */
     threshold?: number;
 
@@ -67,9 +79,17 @@ export interface UseMotionPanSnapOptions {
      * Velocity threshold in px/s. If exceeded, snaps in the direction of
      * velocity regardless of distance.
      *
-     * @default 700
+     * @default 500
      */
     velocityThreshold?: number;
+
+    /**
+     * Fast swipe velocity threshold in px/s. If exceeded, triggers a fast swipe
+     * action.
+     *
+     * @default 1000
+     */
+    fastVelocityThreshold?: number;
 
     /**
      * Allowed pointer types
@@ -99,6 +119,15 @@ export interface UseMotionPanSnapOptions {
      *   cancellation
      */
     onCancel?: (snap: number, nextSnap: number) => void;
+
+    /**
+     * Called when a fast swipe is detected. Return the snap index to snap to,
+     * or undefined to ignore.
+     *
+     * @param context - The context of the fast swipe gesture
+     * @returns The snap index to snap to, or undefined to ignore
+     */
+    onFastSwipe?: (context: FastActionContext) => number | undefined;
 }
 
 export function useMotionPanSnap({
@@ -107,13 +136,15 @@ export function useMotionPanSnap({
     initial: _initial = 0,
     elastic = true,
     disabled = false,
-    threshold = 0.3,
-    velocityThreshold = 700,
+    threshold = 0.4,
+    velocityThreshold = 500,
+    fastVelocityThreshold = 1000,
     pointerTypes = ["mouse", "touch", "pen"],
     transition = defaultTransition,
     scrollableEl = null,
     onSnap,
     onCancel,
+    onFastSwipe,
 }: UseMotionPanSnapOptions) {
     const [points, pointsRef] = useDeepMemoizeLatest(
         [..._points].sort((a, b) => a - b)
@@ -127,9 +158,11 @@ export function useMotionPanSnap({
         disabled,
         threshold,
         velocityThreshold,
+        fastVelocityThreshold,
         transition,
         onSnap,
         onCancel,
+        onFastSwipe,
     });
 
     const mountedRef = useRef(true);
@@ -452,7 +485,13 @@ export function useMotionPanSnap({
 
     const handleEnd = useCallback(
         (info: PanInfo) => {
-            const { axis, disabled, onCancel } = optionsRef.current;
+            const {
+                axis,
+                disabled,
+                onCancel,
+                fastVelocityThreshold,
+                onFastSwipe,
+            } = optionsRef.current;
             isDraggingRef.current = false;
 
             if (disabled) {
@@ -463,6 +502,22 @@ export function useMotionPanSnap({
             const current = axis === "x" ? x.get() : y.get();
             const velocity = axis === "x" ? info.velocity.x : info.velocity.y;
             const targetIndex = findNearestSnap(current, velocity);
+
+            // Check for fast swipe
+            if (Math.abs(velocity) > fastVelocityThreshold && onFastSwipe) {
+                const target = onFastSwipe({
+                    velocity: velocity,
+                    snap: snapRef.current,
+                    nextSnap: targetIndex,
+                    direction: resolveDirection(axis, info.directions),
+                    pointerType: info.pointerType,
+                });
+
+                if (target !== undefined) {
+                    snapToInternal(target);
+                    return;
+                }
+            }
 
             if (
                 targetIndex === snapRef.current &&
@@ -553,4 +608,18 @@ export function useMotionPanSnap({
         onPanStart,
         onPanEnd,
     };
+}
+
+function resolveDirection(
+    axis: "x" | "y",
+    directions: PanDirection[]
+): PanDirection {
+    if (axis === "x") {
+        if (directions.includes("left")) return "left";
+        if (directions.includes("right")) return "right";
+    } else {
+        if (directions.includes("up")) return "up";
+        if (directions.includes("down")) return "down";
+    }
+    return "none";
 }
