@@ -1,4 +1,4 @@
-import { IS_SSR } from "./constants";
+import { IS_CLIENT } from "./constants";
 import type { ElementRect, ScrollState, ViewportMetrics } from "./type";
 
 /**
@@ -160,26 +160,44 @@ export function getElementBounding(element: HTMLElement): ElementRect {
 }
 
 /**
- * Computes the current visual viewport metrics.
+ * Computes the current visual viewport + universal touch accessibility metrics.
  *
  * @returns The viewport width, height, and scale.
  */
 export function getViewportMetrics(): ViewportMetrics {
-    if (IS_SSR) {
-        return { width: 0, height: 0, scale: 1 };
+    let width = 0;
+    let height = 0;
+    let scale = 1;
+
+    if (IS_CLIENT && window.visualViewport) {
+        width = window.visualViewport.width;
+        height = window.visualViewport.height;
+        scale = window.visualViewport.scale;
+    } else if (IS_CLIENT) {
+        width = window.innerWidth;
+        height = window.innerHeight;
     }
 
-    if (window.visualViewport) {
-        return {
-            width: window.visualViewport.width,
-            height: window.visualViewport.height,
-            scale: window.visualViewport.scale,
-        };
+    // Aspect ratio (taller screens reduce one-hand reach)
+    const aspect = height / width;
+
+    // Dynamic accessibility factor
+    let factor = 0.45; // default
+
+    if (aspect < 1.7) {
+        factor = 0.5; // short screens → easier reach
+    } else if (aspect > 2.0) {
+        factor = 0.4; // tall screens → harder reach
     }
+
+    const maxAccessibleHeight = height * (factor + 0.15);
+    const preferredAccessibleHeight = height * factor;
 
     return {
-        width: window.innerWidth,
-        height: window.innerHeight,
-        scale: 1,
+        width,
+        height,
+        scale,
+        maxAccessibleHeight,
+        preferredAccessibleHeight,
     };
 }

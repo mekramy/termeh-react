@@ -217,4 +217,6 @@ export interface ViewportMetrics {
     width: number;
     height: number;
     scale: number;
+    maxAccessibleHeight: number;
+    preferredAccessibleHeight: number;
 }

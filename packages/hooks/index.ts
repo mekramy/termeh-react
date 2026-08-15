@@ -16,6 +16,7 @@ export * from "./useMotionPanScroll";
 export * from "./useMotionPanSnap";
 export * from "./useRefCallback";
 export * from "./useRefCallbackAdapter";
+export * from "./useRunOnce";
 export * from "./useScrollState";
 export * from "./useShortcut";
 export * from "./useStableCallback";
