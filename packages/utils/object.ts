@@ -44,3 +44,36 @@ export function retainOrReplace<T>(prev: T, next: T): T {
         ? prev
         : next;
 }
+
+/**
+ * Checks whether `value` matches all properties defined by `source`.
+ *
+ * The comparison is recursive, allowing nested objects to be compared deeply.
+ * Extra properties in `value` are ignored.
+ *
+ * Primitive values are compared using `Object.is`.
+ *
+ * @param source - The expected structure and values.
+ * @param value - The value to match against. It may contain additional
+ *   properties.
+ * @returns `true` if every property defined by `source` matches the
+ *   corresponding property in `value`; otherwise, `false`.
+ */
+export function matches<T>(source: T, value: T): boolean {
+    if (Object.is(source, value)) return true;
+
+    if (
+        typeof source !== "object" ||
+        source === null ||
+        typeof value !== "object" ||
+        value === null
+    )
+        return false;
+
+    return Object.keys(source).every((key) => {
+        const sourceValue = (source as Record<string, unknown>)[key];
+        const valueValue = (value as Record<string, unknown>)[key];
+
+        return matches(sourceValue, valueValue);
+    });
+}
