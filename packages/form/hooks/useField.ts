@@ -5,6 +5,7 @@ import {
     useRef,
     useSyncExternalStore,
     useTransition,
+    type ChangeEvent,
 } from "react";
 import { ValidationError, type Schema } from "yup";
 import { useDebounceCallback, useRefCallbackAdapter } from "../../hooks";
@@ -212,7 +213,7 @@ export function useField<T = unknown>(
     );
 
     const onChange = useCallback(
-        (e: React.ChangeEvent<HTMLInputElement>) => {
+        (e: ChangeEvent<HTMLInputElement>) => {
             setValue(e.target.value as T);
         },
         [setValue]
