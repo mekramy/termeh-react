@@ -1,10 +1,15 @@
 import { useEffect, useRef, useState } from "react";
-import { getViewportMetrics, IS_SSR, type ViewportMetrics } from "../utils";
+import { getViewportMetrics, IS_SSR, type ViewportMetrics } from "../../utils";
 
 /**
- * A React hook to track the visual viewport dimensions and scale.
+ * Subscribes to the current visual viewport and returns its latest metrics.
  *
- * @returns The current viewport metrics and updates on resize.
+ * Uses `window.visualViewport` when available and falls back to the browser
+ * resize event. The value updates on viewport changes and re-renders the hook.
+ *
+ * @returns The current viewport metrics, including width, height, offset,
+ *   scale, and related values. Defaults to the browser viewport metrics when
+ *   Visual Viewport is unavailable.
  */
 export function useVisualViewport(): ViewportMetrics {
     const rafRef = useRef<number | null>(null);

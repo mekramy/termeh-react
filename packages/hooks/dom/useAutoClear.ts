@@ -1,6 +1,5 @@
-import { useIsomorphicLayoutEffect } from "./useIsomorphicLayoutEffect";
+import { useIsomorphicLayoutEffect } from "../react";
 
-/** Element type that supports Select Range. */
 type ClearableElement = Pick<
     HTMLInputElement,
     | "addEventListener"
@@ -12,11 +11,14 @@ type ClearableElement = Pick<
 >;
 
 /**
- * Hook that clears the input value when the Escape key is pressed. Supports
- * clearing only the portion around a separator if provided.
+ * Clears the current input value or the current segment when Escape is pressed.
  *
- * @param element Reference to clearable element
- * @param separator Optional character to determine selection boundaries
+ * When a separator is provided, the hook clears only the segment surrounding
+ * the cursor position, bounded by the nearest separator characters.
+ *
+ * @param element - Target input-like element to listen to.
+ * @param separator - Optional separator used to detect the active segment.
+ *   Default: no separator, so the whole input value is cleared.
  */
 export function useAutoClear(
     element: ClearableElement | null,

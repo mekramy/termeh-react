@@ -1,43 +1,34 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
     getElementBounding,
     retainOrReplace,
     type ElementRect,
-} from "../utils";
-import { useIsomorphicLayoutEffect } from "./useIsomorphicLayoutEffect";
+} from "../../utils";
+import { useIsomorphicLayoutEffect } from "../react";
 
 export interface UseElementBoundingOptions {
     /**
-     * Reset values to 0 on component unmounted
-     *
-     * @default true
+     * Reset the tracked bounds to zero when the element is removed or unset.
+     * Default: `true`.
      */
     reset?: boolean;
 
-    /**
-     * Listen to window resize event
-     *
-     * @default true
-     */
+    /** Recalculate bounds on window resize. Default: `true`. */
     windowResize?: boolean;
-    /**
-     * Listen to window scroll event
-     *
-     * @default true
-     */
+
+    /** Recalculate bounds on window scroll. Default: `true`. */
     windowScroll?: boolean;
 }
 
 /**
- * A React hook to track the bounding rectangle of a DOM element. It uses
- * ResizeObserver, MutationObserver, and window events for robustness.
+ * Tracks the bounding box of a DOM element and refreshes it when the element,
+ * its styles, or the viewport changes.
  *
- * @param element - A reference to the HTML element.
- * @param options - Configuration options for reset and observers.
- * @returns An object containing the current bounding rect and an `update`
- *   function.
+ * @param element - The element to measure.
+ * @param options - Tracking behavior options.
+ * @returns The current bounds and an `update` function that forces a refresh.
  */
 export function useElementBounding<T extends HTMLElement>(
     element: T | null,
@@ -48,9 +39,8 @@ export function useElementBounding<T extends HTMLElement>(
     }: UseElementBoundingOptions = {}
 ): ElementRect & { update: () => void } {
     const rafRef = useRef<number | null>(null);
-    const [rect, setRect] = useState<ElementRect>(() => getEmptyBounding());
+    const [rect, setRect] = useState(getEmptyBounding);
 
-    // Update function to compute and set the element bounding
     const update = useCallback(() => {
         if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
 
@@ -67,7 +57,6 @@ export function useElementBounding<T extends HTMLElement>(
         });
     }, [element, reset]);
 
-    // This ensures that the bounding rect is recalculated whenever the element changes.
     useIsomorphicLayoutEffect(() => {
         update();
     }, [update]);
@@ -81,7 +70,6 @@ export function useElementBounding<T extends HTMLElement>(
         const mutationObserver = new MutationObserver(update);
         mutationObserver.observe(element, {
             attributes: true,
-            attributeFilter: ["style", "class"],
         });
 
         return () => {
@@ -108,13 +96,10 @@ export function useElementBounding<T extends HTMLElement>(
         };
     }, [windowResize, windowScroll, update]);
 
-    return useMemo(
-        () => ({
-            ...rect,
-            update,
-        }),
-        [rect, update]
-    );
+    return {
+        ...rect,
+        update,
+    };
 }
 
 function getEmptyBounding(): ElementRect {

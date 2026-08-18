@@ -1,6 +1,5 @@
-import { useIsomorphicLayoutEffect } from "./useIsomorphicLayoutEffect";
+import { useIsomorphicLayoutEffect } from "../react";
 
-/** Element type that supports text selection. */
 type SelectableElement = Pick<
     HTMLInputElement,
     | "addEventListener"
@@ -11,11 +10,14 @@ type SelectableElement = Pick<
 >;
 
 /**
- * Hook that auto-selects the input value when clicked. Optionally restricts
- * selection boundaries using a separator.
+ * Automatically selects the current value segment when the input is clicked.
  *
- * @param element Reference to selectable element
- * @param separator Optional string to determine selection boundaries
+ * When `separator` is provided, the selection is limited to the segment between
+ * the nearest separator before and after the caret position.
+ *
+ * @param element - Selectable input element. Defaults to `null`.
+ * @param separator - Separator used to detect segment boundaries. Defaults to
+ *   `undefined`.
  */
 export function useAutoSelect(
     element: SelectableElement | null,
