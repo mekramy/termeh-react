@@ -70,3 +70,15 @@ export function formatNumber(v: unknown, separator = ","): string {
 
     return num.toLocaleString("en-US").replace(/,/g, separator);
 }
+
+/**
+ * Clamps a value within the specified inclusive range.
+ *
+ * @param min - The minimum allowed value.
+ * @param max - The maximum allowed value.
+ * @param v - The value to clamp.
+ * @returns The value constrained to the range between `min` and `max`.
+ */
+export function clamp(min: number, max: number, v: number) {
+    return Math.min(Math.max(v, min), max);
+}
