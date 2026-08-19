@@ -8,5 +8,6 @@ export * from "./useLatest";
 export * from "./useOnUnmount";
 export * from "./useRefCallback";
 export * from "./useRefCallbackAdapter";
+export * from "./useRevision";
 export * from "./useStableCallback";
 export * from "./useStateLatest";
