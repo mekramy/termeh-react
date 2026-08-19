@@ -9,4 +9,4 @@ export * from "./useOnUnmount";
 export * from "./useRefCallback";
 export * from "./useRefCallbackAdapter";
 export * from "./useStableCallback";
-export * from "./useStateRef";
+export * from "./useStateLatest";

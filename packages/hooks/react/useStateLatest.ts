@@ -7,21 +7,17 @@ import {
 } from "react";
 
 /**
- * Creates a state value and a ref that always stays in sync.
+ * Creates state with a stable getter for its latest value.
  *
- * Useful when callbacks, timers, or async code need the latest value without
- * stale closures.
+ * Use the getter in callbacks, timers, or async code to avoid stale closures.
  *
- * @default initialState undefined
- * @param initialState - Initial state value. If a function is passed, it is
- *   treated as a lazy initializer and called only once on the first render.
- * @returns A tuple of [state, setState, ref]:
- *
- *   - State: current value
- *   - SetState: updates the state and keeps the ref in sync
- *   - Ref: latest value getter
+ * @default undefined
+ * @param initialState - Initial state value or a lazy initializer function.
+ * @returns A tuple containing the current state, a setter, and a stable getter.
+ *   The setter accepts a value or updater function and keeps the getter in
+ *   sync.
  */
-export function useStateRef<T>(
+export function useStateLatest<T>(
     initialState: T | (() => T)
 ): readonly [T, Dispatch<SetStateAction<T>>, () => T] {
     const [state, setState] = useState(initialState);
