@@ -1,5 +1,7 @@
 import type { PanInfo as MotionPanInfo, Point } from "motion/react";
 import { useMemo } from "react";
+import { useDeepMemoize } from "../react/useDeepMemoize";
+import { useStableCallback } from "../react/useStableCallback";
 
 export type PointerType = "mouse" | "touch" | "pen";
 export type PanDirection = "up" | "down" | "left" | "right" | "none";
@@ -18,74 +20,78 @@ export interface PanInfo {
 
 export interface UseMotionPanOptions {
     /**
-     * Disable all pan callbacks.
+     * Disable pan callbacks.
      *
      * @default false
      */
     disabled?: boolean;
 
     /**
-     * Allowed pointer input types.
+     * Allowed pointer types.
      *
-     * @default all
+     * @default ["mouse", "pen", "touch"]
      */
     pointerTypes?: PointerType[];
 
-    /** Called when pan starts. */
+    /** Called when the pan gesture starts. @default undefined */
     onStart?: (info: PanInfo, event: PointerEvent) => void;
 
-    /** Called while panning. */
+    /** Called for each pan move. @default undefined */
     onMove?: (info: PanInfo, event: PointerEvent) => void;
 
-    /** Called when pan ends. */
+    /** Called when the pan gesture ends. @default undefined */
     onEnd?: (info: PanInfo, event?: PointerEvent) => void;
 }
 
 /**
- * Adapter hook for Motion pan gestures.
+ * Creates Motion pan handler props for a target element.
  *
- * Use returned handlers on motion components:
- *
- * @example
- *     <motion.div {...panHandlers} />
+ * The returned handlers normalize pan data before calling the configured
+ * callbacks. Events are ignored when disabled or when their pointer type is not
+ * included in `pointerTypes`.
  */
 export function useMotionPan({
     disabled = false,
     pointerTypes = ["mouse", "pen", "touch"],
-    onStart,
-    onMove,
-    onEnd,
+    onStart: _onStart,
+    onMove: _onMove,
+    onEnd: _onEnd,
 }: UseMotionPanOptions = {}) {
+    const pointers = useDeepMemoize(pointerTypes);
+    const onStart = useStableCallback(_onStart ?? null);
+    const onMove = useStableCallback(_onMove ?? null);
+    const onEnd = useStableCallback(_onEnd ?? null);
+
     return useMemo(
         () => ({
             onPanStart(event: PointerEvent, info: MotionPanInfo) {
                 const pointerType = normalizePointerType(event.pointerType);
-                if (disabled || !pointerTypes.includes(pointerType)) {
+                if (disabled || !pointers.includes(pointerType)) {
                     return;
                 }
 
-                onStart?.(mapPanInfo(info, event), event);
+                onStart(mapPanInfo(info, event), event);
             },
 
             onPan(event: PointerEvent, info: MotionPanInfo) {
                 const pointerType = normalizePointerType(event.pointerType);
-                if (disabled || !pointerTypes.includes(pointerType)) {
+                if (disabled || !pointers.includes(pointerType)) {
                     return;
                 }
 
-                onMove?.(mapPanInfo(info, event), event);
+                onMove(mapPanInfo(info, event), event);
             },
 
             onPanEnd(event: PointerEvent, info: MotionPanInfo) {
                 const pointerType = normalizePointerType(event.pointerType);
-                if (disabled || !pointerTypes.includes(pointerType)) {
+                if (disabled || !pointers.includes(pointerType)) {
                     return;
                 }
 
-                onEnd?.(mapPanInfo(info, event), event);
+                onEnd(mapPanInfo(info, event), event);
             },
         }),
-        [disabled, pointerTypes, onStart, onMove, onEnd]
+        [disabled, pointers, onStart, onMove, onEnd]
     );
 }
 

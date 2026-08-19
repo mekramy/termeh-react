@@ -1,20 +1,16 @@
 import { useMotionPan, type UseMotionPanOptions } from "./useMotionPan";
 import { useTouchAction, type UseTouchActionOptions } from "./useTouchAction";
 
-/**
- * Options for combining motion pan event handling with scroll touch-action
- * configuration.
- */
 export interface UseMotionPanScrollOptions
     extends UseMotionPanOptions, UseTouchActionOptions {}
 
 /**
- * Attaches pan gesture event handlers and touch-action behavior to a scrollable
- * element.
+ * Connects pan gesture handlers and touch-action rules to a scrollable element.
  *
- * @param scrollEl The element whose scroll container is being managed.
- * @param options Motion pan and touch-action configuration.
- * @returns The pan event handlers and resolved touch-action style helpers.
+ * @param scrollEl The scrollable element, or `null` before it is available.
+ * @param options Pan and touch-action configuration.
+ * @returns Pan lifecycle handlers (`onPan`, `onPanStart`, and `onPanEnd`) and
+ *   the resolved `touchAction` value.
  */
 export function useMotionPanScroll(
     scrollEl: HTMLElement | null,

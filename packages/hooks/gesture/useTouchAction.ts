@@ -1,47 +1,46 @@
 import { useMemo, type CSSProperties } from "react";
-import { useScrollState } from "./useScrollState";
+import { useScrollState } from "../dom";
 
 export type TouchAction = CSSProperties["touchAction"];
 
-/** Options for configuring browser edge-panning behavior. */
 export interface UseTouchActionOptions {
     /**
-     * Axis to resolve for the active touch-action value.
+     * Axis used to resolve the touch-action value.
      *
      * @default "both"
      */
     axis: "x" | "y" | "both";
 
     /**
-     * Bypass scroll-state analysis and return `auto`.
+     * Return `auto` without analyzing scroll state.
      *
      * @default false
      */
     disabled?: boolean;
 
     /**
-     * Allow a top-edge upward swipe to continue panning.
+     * Allow upward panning from the top edge.
      *
      * @default true
      */
     allowUpEdgeSwipe?: boolean;
 
     /**
-     * Allow a bottom-edge downward swipe to continue panning.
+     * Allow downward panning from the bottom edge.
      *
      * @default true
      */
     allowDownEdgeSwipe?: boolean;
 
     /**
-     * Allow a left-edge leftward swipe to continue panning.
+     * Allow leftward panning from the left edge.
      *
      * @default true
      */
     allowLeftEdgeSwipe?: boolean;
 
     /**
-     * Allow a right-edge rightward swipe to continue panning.
+     * Allow rightward panning from the right edge.
      *
      * @default true
      */
@@ -49,15 +48,18 @@ export interface UseTouchActionOptions {
 }
 
 /**
- * Resolve a CSS `touch-action` value from the active scroll direction and edge
- * state.
+ * Resolve the CSS `touch-action` value for a scrollable element.
  *
- * The value is computed ahead of a gesture so the browser can apply the
- * intended edge-panning restrictions.
+ * The value is based on the selected axis, scroll state, and edge-swipe
+ * options. It is computed before a gesture starts so the browser can enforce
+ * the requested panning behavior.
+ *
+ * Returns `"auto"` when no element is provided or the hook is disabled, and
+ * `"none"` when the selected axis cannot scroll.
  *
  * @param element Scrollable element to inspect.
- * @param options Edge-swipe configuration.
- * @returns A CSS `touch-action` value.
+ * @param options Axis, disabled state, and edge-swipe configuration.
+ * @returns The CSS `touch-action` value for the current scroll state.
  */
 export function useTouchAction(
     element: HTMLElement | null,
