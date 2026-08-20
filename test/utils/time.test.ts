@@ -5,7 +5,7 @@ import {
     humanize,
     parse,
     parseFrom,
-    parseRFC3339,
+    parseISO8601,
     toHMS,
 } from "../../packages/utils";
 
@@ -22,9 +22,9 @@ describe("parse", () => {
     });
 });
 
-describe("parseRFC3339", () => {
-    it("parses RFC3339 date", () => {
-        const m = parseRFC3339("2023-10-05T12:30:45Z").utc();
+describe("parseISO8601", () => {
+    it("parses ISO_8601 date", () => {
+        const m = parseISO8601("2023-10-05T12:30:45+03:30");
         expect(m.isValid()).toBe(true);
         expect(m.year()).toBe(2023);
         expect(m.hour()).toBe(12);
@@ -32,7 +32,7 @@ describe("parseRFC3339", () => {
         expect(m.second()).toBe(45);
     });
     it("returns invalid for bad format", () => {
-        expect(parseRFC3339("bad-format").isValid()).toBe(false);
+        expect(parseISO8601("bad-format").isValid()).toBe(false);
     });
 });
 

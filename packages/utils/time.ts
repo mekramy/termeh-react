@@ -3,9 +3,6 @@ import moment, { type MomentInput } from "moment-jalaali";
 // Initialize moment-jalaali with Persian dialect
 moment.loadPersian({ dialect: "persian-modern" });
 
-// Date format constants
-export const RFC3339 = "YYYY-MM-DDTHH:mm:ssZ";
-
 // Translation map for humanized duration
 type TimeUnit = "years" | "months" | "days" | "hours" | "minutes" | "seconds";
 const DURATION_TRANSLATIONS: Record<string, Record<"en" | "fa", string>> = {
@@ -30,18 +27,18 @@ export function parse(date: MomentInput): moment.Moment {
 }
 
 /**
- * Parses a date string in RFC3339 format into a Moment object.
+ * Parses a date string in ISO_8601 format into a Moment object.
  *
- * - Parsing is strict relative to the `RFC3339` format constant.
+ * - Parsing is strict relative to the `ISO_8601` format constant.
  * - Use `isValid()` on the result to check if parsing succeeded.
  *
- * @param date - The RFC3339 date string to parse (e.g.,
+ * @param date - The ISO_8601 date string to parse (e.g.,
  *   "2023-10-05T12:30:45Z").
  * @returns A `moment.Moment` parsed from the input; `isValid()` indicates
  *   validity.
  */
-export function parseRFC3339(date?: string): moment.Moment {
-    return moment(date, RFC3339, true);
+export function parseISO8601(date?: string): moment.Moment {
+    return moment.parseZone(date, moment.ISO_8601, true);
 }
 
 /**
