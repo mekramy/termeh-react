@@ -12,3 +12,4 @@ export * from "./useRefCallbackAdapter";
 export * from "./useStableCallback";
 export * from "./useStateLatest";
 export * from "./useVersionToken";
+export * from "./useWatch";
