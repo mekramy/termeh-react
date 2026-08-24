@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import { getScrollState, retainOrReplace, type ScrollState } from "../../utils";
 import { useIsomorphicLayoutEffect } from "../react";
-import { useDeepMemoize } from "../react/useDeepMemoize";
+import { useMemoize } from "../react/useMemoize";
 
 /** Supported scroll event observers. */
 type ScrollObserver = "scroll" | "resize" | "mutation";
@@ -47,7 +47,7 @@ export function useScrollState<T extends HTMLElement>(
     }: ScrollStateOptions = {}
 ) {
     const rafRef = useRef<number | null>(null);
-    const observersMem = useDeepMemoize(observers);
+    const observersMem = useMemoize(observers);
     const [state, setState] = useState(getEmptyState);
 
     const update = useCallback(() => {

@@ -1,6 +1,6 @@
 import type { PanInfo as MotionPanInfo, Point } from "motion/react";
 import { useMemo } from "react";
-import { useDeepMemoize } from "../react/useDeepMemoize";
+import { useMemoize } from "../react/useMemoize";
 import { useStableCallback } from "../react/useStableCallback";
 
 export type PointerType = "mouse" | "touch" | "pen";
@@ -57,7 +57,7 @@ export function useMotionPan({
     onMove: _onMove,
     onEnd: _onEnd,
 }: UseMotionPanOptions = {}) {
-    const pointers = useDeepMemoize(pointerTypes);
+    const pointers = useMemoize(pointerTypes);
     const onStart = useStableCallback(_onStart ?? null);
     const onMove = useStableCallback(_onMove ?? null);
     const onEnd = useStableCallback(_onEnd ?? null);

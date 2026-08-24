@@ -1,6 +1,6 @@
 import { IS_SSR } from "../../utils";
 import { useIsomorphicLayoutEffect } from "../react";
-import { useDeepMemoize } from "../react/useDeepMemoize";
+import { useMemoize } from "../react/useMemoize";
 import { useStableCallback } from "../react/useStableCallback";
 
 interface UseShortcutOptions {
@@ -41,7 +41,7 @@ export function useShortcut(
     { timeout = 1000, stop = true, prevent = true }: UseShortcutOptions = {}
 ) {
     const stableHandler = useStableCallback(handler);
-    const shortcuts = useDeepMemoize(
+    const shortcuts = useMemoize(
         shortcut
             .toLowerCase()
             .split("+")
