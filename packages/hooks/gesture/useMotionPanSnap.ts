@@ -14,8 +14,11 @@ import {
     useVersionToken,
     useWatch,
 } from "../react";
-import { type PanDirection, type PointerType } from "./useMotionPan";
-import { useMotionPanScroll } from "./useMotionPanScroll";
+import {
+    useMotionPan,
+    type PanDirection,
+    type PointerType,
+} from "./useMotionPan";
 
 const defaultTransition: ValueAnimationTransition = {
     type: "spring",
@@ -24,37 +27,86 @@ const defaultTransition: ValueAnimationTransition = {
     mass: 0.8,
 } as const;
 
+/** The axis on which pan interaction is enabled. */
 type Axis = "x" | "y";
 
+/** The direction of movement relative to the ordered snap points. */
 type PanOrientation = "forward" | "backward" | "none";
 
+/** Defines the thresholds and elastic bounds associated with a snap point. */
 interface Region {
+    /** The absolute position of the snap point. */
     position: number;
+
+    /** The lower position limit for elastic movement. */
     minElastic: number;
+
+    /** The upper position limit for elastic movement. */
     maxElastic: number;
+
+    /** The position threshold for snapping toward the previous point. */
     minThreshold: number;
+
+    /** The position threshold for snapping toward the next point. */
     maxThreshold: number;
 }
 
+/**
+ * Describes the snap state resolved from the current gesture.
+ *
+ * Contains the original snap point, the nearest point in the gesture direction,
+ * the resolved target, and the number of snap points crossed by the gesture.
+ */
 interface SwipeContext {
+    /** The snap point where the gesture started. */
     origin: number;
+
+    /** The next snap point in the gesture direction. */
     next: number;
+
+    /** The snap point the gesture is currently targeting. */
     target: number;
+
+    /** The number of snap points between the origin and target. */
     steps: number;
+
+    /** The physical direction of the gesture. */
     direction: PanDirection;
+
+    /** The direction of movement relative to the snap point order. */
     orientation: PanOrientation;
+
+    /** The type of pointer that initiated the gesture. */
     pointerType: PointerType;
 }
 
+/** Caches the resolved gesture context and its movement boundaries. */
 interface CachedSwipeContext extends SwipeContext {
+    /** Whether elastic movement is allowed for the current context. */
     elastic: boolean;
+
+    /** Whether swiping toward the resolved target is allowed. */
     swipe?: boolean;
+
+    /** The minimum allowed position before clamping or elastic movement. */
     min: number;
+
+    /** The maximum allowed position before clamping or elastic movement. */
     max: number;
+
+    /** The minimum position reachable with elastic movement. */
     elasticMin: number;
+
+    /** The maximum position reachable with elastic movement. */
     elasticMax: number;
 }
 
+/**
+ * Determines whether a gesture action is allowed.
+ *
+ * Returning `false` prevents the swipe action, while `true` or `undefined`
+ * allows the default behavior to continue.
+ */
 export type Guard = (ctx: SwipeContext) => boolean | undefined;
 
 export interface UseMotionPanSnapOptions {
@@ -86,22 +138,23 @@ export interface UseMotionPanSnapOptions {
     disabled?: boolean;
 
     /**
-     * The relative distance required to move from one snap point toward the
-     * next before snapping to it.
+     * The relative distance required to move toward an adjacent snap point
+     * before snapping to it.
      *
      * @default 0.3
      */
     threshold?: number;
 
     /**
-     * The velocity required to force snapping in the swipe direction, in px/s.
+     * The velocity required to force snapping in the gesture direction, in
+     * px/s.
      *
      * @default 900
      */
     velocityThreshold?: number;
 
     /**
-     * The velocity required to trigger fast-swipe handling, in px/s.
+     * The velocity required to trigger custom fast-swipe handling, in px/s.
      *
      * @default 1800
      */
@@ -109,9 +162,6 @@ export interface UseMotionPanSnapOptions {
 
     /** The transition used when animating to a snap point. */
     transition?: ValueAnimationTransition;
-
-    /** The scrollable element used to determine the appropriate touch action. */
-    rootEl?: HTMLElement | null;
 
     /** The pointer types allowed to start a pan gesture. */
     pointerTypes?: PointerType[];
@@ -122,23 +172,22 @@ export interface UseMotionPanSnapOptions {
     /** Determines whether elastic movement is allowed for a snap direction. */
     elasticGuard?: Guard;
 
-    /** Called when component mounted */
+    /** Called when the hook becomes mounted and ready. */
     onMounted?: () => void;
 
-    /** Called when component unmounted */
+    /** Called when the hook is unmounted. */
     onUnMounted?: () => void;
 
     /** Called after a snap animation completes. */
     onSnap?: (from: number, to: number) => void;
 
-    /** Called when a gesture returns to its original snap point. */
+    /** Called when a gesture is cancelled without changing the snap point. */
     onCancel?: (from: number, to: number) => void;
 
     /**
      * Resolves a target snap index for a fast swipe.
      *
-     * Return `undefined` to ignore the fast swipe and use the default snap
-     * resolution.
+     * Return `undefined` to continue with the default snap resolution.
      */
     onFastSwipe?: (ctx: SwipeContext) => number | undefined;
 }
@@ -146,19 +195,19 @@ export interface UseMotionPanSnapOptions {
 /**
  * Adds snap-based pan interaction along a single axis.
  *
- * The gesture moves between ordered snap points and supports threshold-based
- * snapping, velocity-based transitions, elastic overscroll, swipe guards, and
- * custom fast-swipe handling.
+ * Gestures are resolved against an ordered set of snap points using movement
+ * thresholds and velocity. The hook also supports elastic overscroll, swipe and
+ * elastic guards, custom fast-swipe handling, and animated snapping.
  *
- * The returned state includes the current snap index, gesture origin, next and
- * target snap indices, step distance, position, normalized progress, and the
- * required touch-action value. It also provides methods and handlers for
- * controlling and responding to the gesture.
+ * The returned motion values expose the current snap index, gesture origin,
+ * next and target snap indices, snap distance, position, and normalized
+ * progress. It also provides controls for snapping and resetting, together with
+ * the pan gesture handlers and mount state.
  *
- * @param options - Configuration for the snap points, gesture behavior, guards,
- *   and callbacks.
- * @returns Motion state, gesture handlers, and controls for snapping between
- *   points.
+ * @param options - Configuration for snap points, gesture behavior, guards,
+ *   animation, and lifecycle callbacks.
+ * @returns Motion values, gesture handlers, and controls for snap-based pan
+ *   interaction.
  */
 export function useMotionPanSnap({
     axis,
@@ -170,7 +219,6 @@ export function useMotionPanSnap({
     velocityThreshold = 900,
     fastVelocityThreshold = 1800,
     transition = defaultTransition,
-    rootEl = null,
     pointerTypes,
     swipeGuard,
     elasticGuard,
@@ -372,181 +420,167 @@ export function useMotionPanSnap({
         position.set(destination.position);
     });
 
-    const { touchAction, onPan, onPanStart, onPanEnd } = useMotionPanScroll(
-        rootEl,
-        {
-            axis,
-            pointerTypes,
-            allowUpEdgeSwipe: axis === "y",
-            allowDownEdgeSwipe: axis === "y",
-            allowLeftEdgeSwipe: axis === "x",
-            allowRightEdgeSwipe: axis === "x",
-            onStart() {
-                if (disabled) return _finishGesture();
+    const { onPan, onPanStart, onPanEnd } = useMotionPan({
+        pointerTypes,
+        onStart() {
+            if (disabled) return _finishGesture();
 
-                _stopAnimations();
-                isDraggingRef.current = true;
-                contextCacheRef.current = null;
-                startValueRef.current = position.get();
-            },
-            onMove(info) {
-                if (disabled) return _finishGesture(snap);
+            _stopAnimations();
+            isDraggingRef.current = true;
+            contextCacheRef.current = null;
+            startValueRef.current = position.get();
+        },
+        onMove(info) {
+            if (disabled) return _finishGesture(snap);
 
-                const _position =
-                    startValueRef.current +
-                    (axis === "x" ? info.offset.x : info.offset.y);
-                const _pointInfo = resolvePoints(
-                    axis,
-                    _position,
-                    info.directions,
-                    snap,
-                    regions
-                );
-                const _context = {
-                    ..._pointInfo,
-                    origin: snap,
-                    pointerType: info.pointerType,
-                };
+            const _position =
+                startValueRef.current +
+                (axis === "x" ? info.offset.x : info.offset.y);
+            const _pointInfo = resolvePoints(
+                axis,
+                _position,
+                info.directions,
+                snap,
+                regions
+            );
+            const _context = {
+                ..._pointInfo,
+                origin: snap,
+                pointerType: info.pointerType,
+            };
 
-                let _next: number = 0,
-                    _target: number = 0,
-                    _steps: number = 0,
-                    _min: number = 0,
-                    _max: number = 0,
-                    _elasticMin: number = 0,
-                    _elasticMax: number = 0,
-                    _elastic: boolean = false;
+            let _next: number = 0,
+                _target: number = 0,
+                _steps: number = 0,
+                _min: number = 0,
+                _max: number = 0,
+                _elasticMin: number = 0,
+                _elasticMax: number = 0,
+                _elastic: boolean = false;
 
-                const _cached = contextCacheRef.current;
+            const _cached = contextCacheRef.current;
+            if (
+                _cached?.swipe === false &&
+                _cached.direction === _pointInfo.direction &&
+                _cached.orientation === _pointInfo.orientation
+            ) {
+                _next = _cached.next;
+                _target = _cached.target;
+                _steps = _cached.steps;
+                _min = _cached.min;
+                _max = _cached.max;
+                _elasticMin = _cached.elasticMin;
+                _elasticMax = _cached.elasticMax;
+                _elastic = _cached.elastic;
+            } else {
                 if (
-                    _cached?.swipe === false &&
-                    _cached.direction === _pointInfo.direction &&
-                    _cached.orientation === _pointInfo.orientation
+                    !contextCacheRef.current ||
+                    !matches(_context, contextCacheRef.current)
                 ) {
-                    _next = _cached.next;
-                    _target = _cached.target;
-                    _steps = _cached.steps;
-                    _min = _cached.min;
-                    _max = _cached.max;
-                    _elasticMin = _cached.elasticMin;
-                    _elasticMax = _cached.elasticMax;
-                    _elastic = _cached.elastic;
-                } else {
-                    if (
-                        !contextCacheRef.current ||
-                        !matches(_context, contextCacheRef.current)
-                    ) {
-                        contextCacheRef.current = resolveContext(
-                            _context,
-                            elastic,
-                            swipeGuard,
-                            elasticGuard,
-                            regions
-                        );
-                    }
-
-                    _next = _pointInfo.next;
-                    _target = _pointInfo.target;
-                    _steps = _pointInfo.steps;
-                    _min = contextCacheRef.current.min;
-                    _max = contextCacheRef.current.max;
-                    _elasticMin = contextCacheRef.current.elasticMin;
-                    _elasticMax = contextCacheRef.current.elasticMax;
-                    _elastic = contextCacheRef.current.elastic;
-                }
-
-                position.set(
-                    applyElastic(
-                        _position,
-                        _min,
-                        _max,
-                        _elasticMin,
-                        _elasticMax,
-                        _elastic
-                    )
-                );
-                next.set(_next);
-                target.set(_target);
-                steps.set(_steps);
-            },
-            onEnd(info) {
-                if (disabled) return _finishGesture(snap);
-
-                const _velocity =
-                    axis === "x" ? info.velocity.x : info.velocity.y;
-                const _isFastSwipe =
-                    Math.abs(_velocity) > fastVelocityThreshold;
-
-                const _pointInfo = resolvePoints(
-                    axis,
-                    position.get(),
-                    info.directions,
-                    snap,
-                    regions
-                );
-                const _context = {
-                    ..._pointInfo,
-                    origin: snap,
-                    pointerType: info.pointerType,
-                };
-
-                /** Check for fast swipe */
-                if (_isFastSwipe && onFastSwipe) {
-                    const target = onFastSwipe(_context);
-                    if (target !== undefined) {
-                        _finishGesture(target);
-                        return;
-                    }
-                }
-
-                /** Check for guard */
-                const resolved = resolveContext(
-                    _context,
-                    elastic,
-                    swipeGuard,
-                    elasticGuard,
-                    regions
-                );
-                if (resolved.swipe === false) {
-                    _finishGesture(resolved.target);
-                    return;
-                }
-
-                /** Override the normal target by velocity */
-                if (
-                    Math.abs(_velocity) >= velocityThreshold &&
-                    resolved.next !== snap
-                ) {
-                    resolved.target = resolved.next;
-                    resolved.steps = Math.abs(
-                        resolved.target - resolved.origin
+                    contextCacheRef.current = resolveContext(
+                        _context,
+                        elastic,
+                        swipeGuard,
+                        elasticGuard,
+                        regions
                     );
                 }
 
-                const isElastic = isElasticOverscroll(
-                    position.get(),
-                    resolved.min,
-                    resolved.max,
-                    regions
-                );
+                _next = _pointInfo.next;
+                _target = _pointInfo.target;
+                _steps = _pointInfo.steps;
+                _min = contextCacheRef.current.min;
+                _max = contextCacheRef.current.max;
+                _elasticMin = contextCacheRef.current.elasticMin;
+                _elasticMax = contextCacheRef.current.elasticMax;
+                _elastic = contextCacheRef.current.elastic;
+            }
 
-                if (
-                    resolved.target === snap &&
-                    resolved.next !== snap &&
-                    !isElastic
-                ) {
-                    onCancel?.(snap, resolved.next);
+            position.set(
+                applyElastic(
+                    _position,
+                    _min,
+                    _max,
+                    _elasticMin,
+                    _elasticMax,
+                    _elastic
+                )
+            );
+            next.set(_next);
+            target.set(_target);
+            steps.set(_steps);
+        },
+        onEnd(info) {
+            if (disabled) return _finishGesture(snap);
+
+            const _velocity = axis === "x" ? info.velocity.x : info.velocity.y;
+            const _isFastSwipe = Math.abs(_velocity) > fastVelocityThreshold;
+
+            const _pointInfo = resolvePoints(
+                axis,
+                position.get(),
+                info.directions,
+                snap,
+                regions
+            );
+            const _context = {
+                ..._pointInfo,
+                origin: snap,
+                pointerType: info.pointerType,
+            };
+
+            /** Check for fast swipe */
+            if (_isFastSwipe && onFastSwipe) {
+                const target = onFastSwipe(_context);
+                if (target !== undefined) {
+                    _finishGesture(target);
+                    return;
                 }
+            }
 
+            /** Check for guard */
+            const resolved = resolveContext(
+                _context,
+                elastic,
+                swipeGuard,
+                elasticGuard,
+                regions
+            );
+            if (resolved.swipe === false) {
                 _finishGesture(resolved.target);
-            },
-        }
-    );
+                return;
+            }
+
+            /** Override the normal target by velocity */
+            if (
+                Math.abs(_velocity) >= velocityThreshold &&
+                resolved.next !== snap
+            ) {
+                resolved.target = resolved.next;
+                resolved.steps = Math.abs(resolved.target - resolved.origin);
+            }
+
+            const isElastic = isElasticOverscroll(
+                position.get(),
+                resolved.min,
+                resolved.max,
+                regions
+            );
+
+            if (
+                resolved.target === snap &&
+                resolved.next !== snap &&
+                !isElastic
+            ) {
+                onCancel?.(snap, resolved.next);
+            }
+
+            _finishGesture(resolved.target);
+        },
+    });
 
     return {
         snap,
-        touchAction,
-
         origin,
         next,
         target,

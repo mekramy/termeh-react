@@ -45,7 +45,7 @@ export function useScrollState<T extends HTMLElement>(
         threshold = 0,
         observers = ["scroll", "resize", "mutation"],
     }: ScrollStateOptions = {}
-) {
+): ScrollState & { update: () => void } {
     const rafRef = useRef<number | null>(null);
     const observersMem = useMemoize(observers);
     const [state, setState] = useState(getEmptyState);

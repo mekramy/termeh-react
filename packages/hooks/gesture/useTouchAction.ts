@@ -1,46 +1,46 @@
 import { useMemo, type CSSProperties } from "react";
-import { useScrollState } from "../dom";
+import type { ScrollState } from "../../utils";
 
 export type TouchAction = CSSProperties["touchAction"];
 
 export interface UseTouchActionOptions {
-    /**
-     * Axis used to resolve the touch-action value.
-     *
-     * @default "both"
-     */
+    /** The axis along which panning is enabled. */
     axis: "x" | "y" | "both";
 
     /**
-     * Return `auto` without analyzing scroll state.
+     * Whether touch-action resolution is disabled.
      *
      * @default false
      */
     disabled?: boolean;
 
     /**
-     * Allow upward panning from the top edge.
+     * Whether downward panning is allowed when the scrollable element is at the
+     * top edge.
      *
      * @default true
      */
     allowUpEdgeSwipe?: boolean;
 
     /**
-     * Allow downward panning from the bottom edge.
+     * Whether upward panning is allowed when the scrollable element is at the
+     * bottom edge.
      *
      * @default true
      */
     allowDownEdgeSwipe?: boolean;
 
     /**
-     * Allow leftward panning from the left edge.
+     * Whether rightward panning is allowed when the scrollable element is at
+     * the left edge.
      *
      * @default true
      */
     allowLeftEdgeSwipe?: boolean;
 
     /**
-     * Allow rightward panning from the right edge.
+     * Whether leftward panning is allowed when the scrollable element is at the
+     * right edge.
      *
      * @default true
      */
@@ -48,21 +48,29 @@ export interface UseTouchActionOptions {
 }
 
 /**
- * Resolve the CSS `touch-action` value for a scrollable element.
+ * Resolves the CSS `touch-action` value for a scrollable element.
  *
- * The value is based on the selected axis, scroll state, and edge-swipe
- * options. It is computed before a gesture starts so the browser can enforce
- * the requested panning behavior.
+ * The resolved value reflects the enabled pan axis, available scroll
+ * directions, and edge-swipe constraints. When an edge swipe is allowed, the
+ * corresponding pan direction is preserved so the gesture can leave the
+ * scrollable area.
  *
- * Returns `"auto"` when no element is provided or the hook is disabled, and
- * `"none"` when the selected axis cannot scroll.
+ * Returns `"auto"` when disabled, `"none"` when no scrolling is available, or
+ * the appropriate directional `touch-action` value otherwise.
  *
- * @param element Scrollable element to inspect.
- * @param options Axis, disabled state, and edge-swipe configuration.
- * @returns The CSS `touch-action` value for the current scroll state.
+ * @param scrollState - The current scrollability and edge state.
+ * @param options - Axis and edge-swipe configuration.
+ * @returns The resolved CSS `touch-action` value.
  */
 export function useTouchAction(
-    element: HTMLElement | null,
+    {
+        canScrollHorizontally,
+        canScrollVertically,
+        isLeftEdgeReached,
+        isRightEdgeReached,
+        isTopEdgeReached,
+        isBottomEdgeReached,
+    }: ScrollState,
     {
         axis = "both",
         disabled = false,
@@ -72,18 +80,8 @@ export function useTouchAction(
         allowRightEdgeSwipe = true,
     }: UseTouchActionOptions
 ): TouchAction {
-    const {
-        canScrollHorizontally,
-        canScrollVertically,
-
-        isTopEdgeReached,
-        isBottomEdgeReached,
-        isLeftEdgeReached,
-        isRightEdgeReached,
-    } = useScrollState(element);
-
-    return useMemo<TouchAction>(() => {
-        if (!disabled && element) {
+    const touchAction = useMemo<TouchAction>(() => {
+        if (!disabled) {
             if (axis === "x") {
                 if (!canScrollHorizontally) return "none";
                 if (isLeftEdgeReached && allowLeftEdgeSwipe) return "pan-right";
@@ -117,7 +115,6 @@ export function useTouchAction(
         return "auto";
     }, [
         axis,
-        element,
         disabled,
         allowUpEdgeSwipe,
         allowDownEdgeSwipe,
@@ -130,4 +127,6 @@ export function useTouchAction(
         isLeftEdgeReached,
         isRightEdgeReached,
     ]);
+
+    return touchAction;
 }
