@@ -84,7 +84,7 @@ export function BaseToast({ icon, body, actions, className }: BaseProps) {
                 {icon && <div className="toast-icon">{icon}</div>}
                 <div className="toast-content">{body(props)}</div>
             </div>
-            {actions && <div className="toast-actions">{actions(props)}</div>}
+            {actions && <div className="actions">{actions(props)}</div>}
             <div className="toast-progress" style={{ width: `${progress}%` }} />
         </div>
     );

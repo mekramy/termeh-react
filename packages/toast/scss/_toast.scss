@@ -97,37 +97,10 @@
                         }
                     }
 
-                    > .toast-actions {
-                        display: flex;
-                        flex-direction: row;
-                        align-items: center;
-                        justify-content: flex-end;
-                        gap: $gap-micro;
+                    > .actions {
                         padding: 1em $gap-macro;
-                        @include termeh.transition(all);
 
                         .action {
-                            @include termeh.control();
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            position: relative;
-                            cursor: pointer;
-                            text-align: center;
-                            width: auto;
-                            white-space: nowrap;
-                            text-decoration: none;
-                            border-radius: $radius;
-                            text-overflow: ellipsis;
-                            padding: termeh.inline-padding();
-                            @include termeh.transition(all);
-                            @include termeh.unselectable();
-
-                            &:hover {
-                                text-decoration: none;
-                                transform: scale(1.05);
-                            }
-
                             &:not(.is-secondary) {
                                 color: $primary-foreground;
                                 background-color: rgba($primary, 0.65);
@@ -138,6 +111,8 @@
                             }
 
                             &.is-secondary {
+                                color: inherit;
+
                                 &:hover {
                                     background-color: rgba($foreground, 0.1);
                                 }
@@ -186,7 +161,7 @@
                                 color: $-readable;
                             }
 
-                            > .toast-actions .action:not(.is-secondary) {
+                            > .actions .action:not(.is-secondary) {
                                 color: $-foreground;
                                 background-color: rgba($color, 0.65);
 
@@ -238,7 +213,7 @@
             &.is-stacked .tt-item {
                 &.is-active {
                     .toast {
-                        > .toast-actions {
+                        > .actions {
                             .action {
                                 color: transparent;
                                 background: color.mix(
@@ -263,7 +238,7 @@
                             $-foreground: termeh.variant($name, "foreground");
 
                             &.is-#{$name} {
-                                > .toast-actions .action:not(.is-secondary) {
+                                > .actions .action:not(.is-secondary) {
                                     color: transparent;
                                     background: color.mix(
                                         $background,
