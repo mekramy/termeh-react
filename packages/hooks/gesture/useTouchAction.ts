@@ -8,6 +8,12 @@ export interface UseTouchActionOptions {
     axis: "x" | "y" | "both";
 
     /**
+     * The fallback `touch-action` value when no specific edge-swipe rules
+     * apply.
+     */
+    fallback?: TouchAction;
+
+    /**
      * Whether touch-action resolution is disabled.
      *
      * @default false
@@ -73,6 +79,7 @@ export function useTouchAction(
     }: ScrollState,
     {
         axis = "both",
+        fallback = "auto",
         disabled = false,
         allowUpEdgeSwipe = true,
         allowDownEdgeSwipe = true,
@@ -112,12 +119,13 @@ export function useTouchAction(
             }
         }
 
-        return "auto";
+        return fallback;
     }, [
         axis,
         disabled,
         allowUpEdgeSwipe,
         allowDownEdgeSwipe,
+        fallback,
         allowLeftEdgeSwipe,
         allowRightEdgeSwipe,
         canScrollHorizontally,

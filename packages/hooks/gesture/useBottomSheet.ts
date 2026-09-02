@@ -1,19 +1,21 @@
 import { useTransform } from "motion/react";
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import { type ViewportMetrics } from "../../utils";
 import {
     useMotionPanSnap,
     type UseMotionPanSnapOptions,
 } from "./useMotionPanSnap";
 
-const NORMAL_MAPPING: BottomSheetState[] = ["normal", "closed"];
-const EXPANDED_MAPPING: BottomSheetState[] = ["expanded", "normal", "closed"];
+const CLOSED_IDX = 2;
+const NORMAL_IDX = 1;
+const EXPANDED_IDX = 0;
+const STATES: readonly BottomSheetState[] = ["expanded", "normal", "closed"];
 
 /** The current state of the bottom sheet. */
 type BottomSheetState = "closed" | "normal" | "expanded";
 
 /** Configuration options for the useBottomSheet hook. */
-export interface UseBottomSheetOptons extends Omit<
+export interface UseBottomSheetOptions extends Omit<
     UseMotionPanSnapOptions,
     | "axis"
     | "points"
@@ -40,13 +42,6 @@ export interface UseBottomSheetOptons extends Omit<
     gap?: number;
 
     /**
-     * Initial state of the sheet.
-     *
-     * @default "normal"
-     */
-    initial?: "normal" | "expanded";
-
-    /**
      * Whether the sheet can be expanded to the top gap.
      *
      * @default true
@@ -66,6 +61,21 @@ export interface UseBottomSheetOptons extends Omit<
      * @default false
      */
     fastClose?: boolean;
+
+    /**
+     * Whether the sheet animates from the closed position to its initial state
+     * when mounted.
+     *
+     * @default true
+     */
+    enterAnimation?: boolean;
+
+    /**
+     * Whether the sheet has elastic behavior when expanded.
+     *
+     * @default true
+     */
+    elasticExpand?: boolean;
 
     /**
      * Opacity range applied while the sheet is closing.
@@ -108,15 +118,16 @@ export interface UseBottomSheetOptons extends Omit<
 export function useBottomSheet({
     viewport,
     gap = 0,
-    initial = "normal",
     expandable = true,
     closable = true,
     fastClose = false,
+    enterAnimation = true,
+    elasticExpand = true,
     opacityRange = [0.1, 1],
     elastic,
     disabled,
-    threshold = 0.15,
-    velocityThreshold = 500,
+    threshold,
+    velocityThreshold,
     fastVelocityThreshold,
     transition,
     pointerTypes,
@@ -124,25 +135,17 @@ export function useBottomSheet({
     onRestore,
     onExpand,
     onClose,
-}: UseBottomSheetOptons) {
+}: UseBottomSheetOptions) {
     const { height: viewportHeight, maxAccessibleHeight } = viewport;
 
     // Measuring
     const normalY = viewportHeight - maxAccessibleHeight;
     const expandedY = gap;
     const closedY = viewportHeight;
-    const points = expandable
-        ? [expandedY, normalY, closedY]
-        : [normalY, closedY];
+    const points = [expandedY, normalY, closedY];
 
-    const mapping = expandable ? EXPANDED_MAPPING : NORMAL_MAPPING;
-
-    // Resolve indexes
-    const closeIdx = mapping.indexOf("closed");
-    const normalIdx = mapping.indexOf("normal");
-    const expandedIdx = mapping.indexOf("expanded");
-
-    const initialIdx = mapping.indexOf(expandable ? initial : "normal");
+    /** Handle enter animation */
+    const entering = useRef(enterAnimation);
 
     // Core Api
     const {
@@ -161,7 +164,7 @@ export function useBottomSheet({
     } = useMotionPanSnap({
         axis: "y",
         points,
-        initial: initialIdx,
+        initial: enterAnimation ? CLOSED_IDX : NORMAL_IDX,
         elastic,
         disabled,
         threshold,
@@ -169,56 +172,84 @@ export function useBottomSheet({
         fastVelocityThreshold,
         transition,
         pointerTypes,
-        onMounted: onOpen,
-        swipeGuard: ({ next }) =>
-            !closable && next === closeIdx ? false : undefined,
-        elasticGuard: ({ direction, target }) =>
-            direction === "up" || target === closeIdx ? false : undefined,
+        onMounted: () => {
+            if (enterAnimation) snapTo(NORMAL_IDX);
+            onOpen?.();
+        },
+        swipeGuard: ({ next }) => {
+            if (next === EXPANDED_IDX && !expandable) {
+                return false;
+            }
+
+            if (next === CLOSED_IDX && !closable) {
+                return false;
+            }
+
+            return undefined;
+        },
+        elasticGuard: ({ direction, target }) => {
+            if (direction === "down" && target === CLOSED_IDX) {
+                return false;
+            }
+
+            if (
+                direction === "up" &&
+                (target !== NORMAL_IDX || !elasticExpand)
+            ) {
+                return false;
+            }
+
+            return undefined;
+        },
         onSnap: (_, to) => {
             if (!isMounted()) return;
 
-            switch (mapping[to]) {
-                case "closed":
+            if (entering.current) entering.current = false;
+
+            switch (to) {
+                case CLOSED_IDX:
                     return onClose?.();
 
-                case "normal":
+                case NORMAL_IDX:
                     return onRestore?.();
 
-                case "expanded":
+                case EXPANDED_IDX:
                     return onExpand?.();
             }
         },
         onFastSwipe: ({ direction }) => {
             if (closable && fastClose && direction === "down") {
-                return closeIdx;
+                return CLOSED_IDX;
             }
         },
     });
 
-    const close = useCallback(() => snapTo(closeIdx), [closeIdx, snapTo]);
+    const close = useCallback(() => snapTo(CLOSED_IDX), [snapTo]);
 
-    const restore = useCallback(() => snapTo(normalIdx), [normalIdx, snapTo]);
+    const restore = useCallback(() => snapTo(NORMAL_IDX), [snapTo]);
 
-    const expand = useCallback(() => {
-        if (!expandable) return restore();
-
-        snapTo(expandedIdx);
-    }, [expandable, expandedIdx, restore, snapTo]);
+    const expand = useCallback(() => snapTo(EXPANDED_IDX), [snapTo]);
 
     // Stats
-    const state = mapping[snap];
+    const state = STATES[snap];
     const height = useTransform([next, position], () =>
-        next.get() === closeIdx
+        next.get() === CLOSED_IDX
             ? maxAccessibleHeight
             : viewportHeight - position.get()
     );
     const y = useTransform([next, position], () =>
-        next.get() === closeIdx ? position.get() - normalY : 0
+        next.get() === CLOSED_IDX ? position.get() - normalY : 0
     );
     const opacity = useTransform([progress, target], () => {
         const [min, max] = opacityRange;
 
-        if (min >= 0 && max <= 1 && min < max && target.get() === closeIdx) {
+        if (
+            !entering.current &&
+            min >= 0 &&
+            max <= 1 &&
+            min < max &&
+            target.get() === CLOSED_IDX
+        ) {
             return min + progress.get() * (max - min);
         }
 
