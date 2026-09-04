@@ -284,6 +284,7 @@ export function useMotionPanSnap({
     const contextCacheRef = useRef<CachedSwipeContext>(null);
     const startValueRef = useRef(regions[initial]?.position ?? 0);
     const animationControlsRef = useRef<AnimationPlaybackControls>(null);
+    const animationDestinationRef = useRef<number | null>(null);
 
     /** Global states and Motion values */
     const [snap, setSnap] = useState(initial);
@@ -314,6 +315,7 @@ export function useMotionPanSnap({
     const _stopAnimations = useStableCallback(() => {
         animationControlsRef.current?.stop();
         animationControlsRef.current = null;
+        animationDestinationRef.current = null;
     });
 
     /** Play move animation to special point */
@@ -322,27 +324,30 @@ export function useMotionPanSnap({
             _stopAnimations();
 
             const version = nextVersion();
+            animationDestinationRef.current = destination;
+
             const onComplete = () => {
-                if (isMounted() && verifyVersion(version)) {
-                    animationControlsRef.current = null;
-                    callback?.();
-                }
+                if (!isMounted() || !verifyVersion(version)) return;
+
+                animationControlsRef.current = null;
+                animationDestinationRef.current = null;
+                callback?.();
             };
 
-            if (anim) {
-                animationControlsRef.current = animate(
-                    position,
-                    destination,
-                    transition
-                );
-
-                animationControlsRef.current.finished
-                    .then(onComplete)
-                    .catch(_stopAnimations);
-            } else {
+            if (!anim) {
                 position.set(destination);
                 onComplete();
+                return;
             }
+
+            animationControlsRef.current = animate(
+                position,
+                destination,
+                transition
+            );
+            animationControlsRef.current.finished
+                .then(onComplete)
+                .catch(_stopAnimations);
         }
     );
 
@@ -353,7 +358,13 @@ export function useMotionPanSnap({
             const clamped = clamp(0, lastSnap, index);
             const destination = points[clamped];
 
-            if (destination === undefined) return;
+            if (
+                destination === undefined ||
+                (animationControlsRef.current &&
+                    animationDestinationRef.current === destination)
+            )
+                return;
+
             if (clamped !== perv) setSnap(clamped);
 
             _animateTo(destination, animate, () => {

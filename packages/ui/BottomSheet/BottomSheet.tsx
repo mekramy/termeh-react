@@ -1,5 +1,11 @@
 import { motion } from "motion/react";
-import { useRef, type HTMLAttributes, type ReactNode } from "react";
+import {
+    useImperativeHandle,
+    useRef,
+    type HTMLAttributes,
+    type ReactNode,
+    type Ref,
+} from "react";
 import {
     useBottomSheet,
     useScrollState,
@@ -14,8 +20,15 @@ type SlotProps = Pick<
     "state" | "progress" | "close" | "restore" | "expand"
 >;
 
+export type BottomSheetRef = {
+    close: () => void;
+    restore: () => void;
+    expand: () => void;
+};
+
 type BaseProps = HTMLAttributes<HTMLDivElement> &
     Omit<UseBottomSheetOptions, "viewport" | "fastClose"> & {
+        ref?: Ref<BottomSheetRef>;
         height?: number;
         scrollFade?: boolean;
         body: (props: SlotProps) => ReactNode;
@@ -41,6 +54,7 @@ export function BottomSheet({
     onRestore,
     onExpand,
     onClose,
+    ref,
     height: defaultHeight,
     scrollFade = true,
     header,
@@ -101,6 +115,16 @@ export function BottomSheet({
         restore,
         expand,
     };
+
+    useImperativeHandle(
+        ref,
+        () => ({
+            close,
+            restore,
+            expand,
+        }),
+        [close, restore, expand]
+    );
 
     return (
         <motion.div
