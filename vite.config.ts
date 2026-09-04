@@ -30,6 +30,7 @@ export default defineConfig({
                     import.meta.dirname,
                     "packages/lister/index.ts"
                 ),
+                ui: resolve(import.meta.dirname, "packages/ui/index.ts"),
                 toast: resolve(import.meta.dirname, "packages/toast/index.ts"),
             },
             fileName: (format, entry) => {
@@ -61,8 +62,26 @@ export default defineConfig({
             targets: [
                 { src: "./eslint.extend.js", dest: "." },
                 { src: "./packages/style.scss", dest: "." },
-                { src: "./packages/toast/style.scss", dest: "toast" },
-                { src: "./packages/toast/scss", dest: "toast" },
+                {
+                    src: "./packages/ui/style.scss",
+                    dest: ".",
+                    rename: { stripBase: 1 },
+                },
+                {
+                    src: "./packages/ui/*/*.scss",
+                    dest: ".",
+                    rename: { stripBase: 1 },
+                },
+                {
+                    src: "./packages/toast/style.scss",
+                    dest: ".",
+                    rename: { stripBase: 1 },
+                },
+                {
+                    src: "./packages/toast/scss",
+                    dest: ".",
+                    rename: { stripBase: 1 },
+                },
             ],
         }),
     ],

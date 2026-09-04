@@ -1,0 +1,179 @@
+@use "sass:color";
+@use "termeh";
+
+@mixin use-bottom-sheet($colors: null) {
+    @if not termeh.module-presented("bottom-sheet") {
+        @include termeh.require("bottom-sheet", "action");
+        @include termeh.present-module("bottom-sheet");
+
+        $colors: termeh.list-safe($colors, "use-bottom-sheet", "colors", ());
+
+        $primary: termeh.color("primary");
+        $decorator: termeh.var("decorator", "size", 2px);
+        $gap-micro: termeh.var("gap", "micro", 8px);
+        $gap-macro: termeh.var("gap", "macro", 1.6em);
+        $line-height: termeh.var("line-height", "normal", 1.6em);
+
+        $fallback-background: termeh.var("base", "color", white);
+        $fallback-foreground: termeh.var("base", "foreground", black);
+        $fallback-separator: termeh.var("base", "separator", #e0e4eb);
+        $fallback-radius: termeh.var("radius", "normal");
+
+        $background: termeh.var(
+            "bottom-sheet",
+            "background",
+            $fallback-background
+        );
+        $foreground: termeh.var(
+            "bottom-sheet",
+            "foreground",
+            $fallback-foreground
+        );
+        $separator: termeh.var(
+            "bottom-sheet",
+            "separator",
+            $fallback-separator
+        );
+        $radius: termeh.var("bottom-sheet", "radius", $fallback-radius);
+        $shadow: termeh.var("bottom-sheet", "shadow", none);
+        $padding: termeh.var("bottom-sheet", "padding", $gap-macro);
+        $grabber: termeh.var("bottom-sheet", "grabber-background", $separator);
+
+        @at-root {
+            .bottom-sheet-wrapper {
+                display: flex;
+                flex-direction: column;
+                align-items: stretch;
+                justify-content: flex-end;
+
+                .bottom-sheet {
+                    flex: none;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: stretch;
+                    position: relative;
+                    max-width: 100%;
+                    max-height: 100%;
+                    position: relative;
+                    color: $foreground;
+                    background: $background;
+                    box-shadow: $shadow;
+                    border-top-left-radius: $radius;
+                    border-top-right-radius: $radius;
+                    overflow: hidden;
+
+                    .grabber {
+                        flex: none;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        padding: termeh.half($padding) $padding;
+                        touch-action: none;
+
+                        div {
+                            display: block;
+                            border-radius: 9999px;
+                            background: $grabber;
+                            width: 4rem;
+                            height: termeh.half($gap-micro);
+                        }
+                    }
+
+                    .bottom-sheet-header {
+                        flex: none;
+                        display: flex;
+                        flex-flow: row wrap;
+                        align-items: center;
+                        touch-action: none;
+                        padding: termeh.half($padding) $padding;
+                        border-bottom: 1px solid $separator;
+
+                        h1,
+                        h2,
+                        h3,
+                        h4,
+                        h5,
+                        h6 {
+                            flex: 1;
+                            font-size: 1em;
+                            font-weight: 500;
+                            line-height: $line-height;
+                            @include termeh.marginless();
+                        }
+                    }
+
+                    .bottom-sheet-scroller {
+                        display: flex;
+                        flex: 1 1 auto;
+                        position: relative;
+                        overflow: hidden;
+                        box-sizing: border-box;
+
+                        .scroll-fade {
+                            display: none;
+                            position: absolute;
+                            touch-action: none;
+                            width: 100%;
+                            height: $padding * 3;
+
+                            &.is-top {
+                                top: 0;
+                                background: linear-gradient(
+                                    to bottom,
+                                    $background,
+                                    transparent
+                                );
+                            }
+
+                            &.is-bottom {
+                                bottom: 0;
+                                background: linear-gradient(
+                                    to top,
+                                    $background,
+                                    transparent
+                                );
+                            }
+
+                            &.is-active {
+                                display: block;
+                            }
+                        }
+
+                        .bottom-sheet-content {
+                            padding: $padding;
+                            overflow: hidden;
+                            overflow-y: auto;
+                        }
+                    }
+
+                    .actions {
+                        flex: none;
+                        touch-action: none;
+                        padding: termeh.half($padding) $padding;
+                        border-top: 1px solid $separator;
+                    }
+
+                    &.is-loading {
+                        @include termeh.loader(
+                            $line-height,
+                            $primary,
+                            $decorator
+                        );
+
+                        > * {
+                            opacity: 0;
+                        }
+                    }
+
+                    @each $name, $color in termeh.colors($colors) {
+                        &.is-#{$name} {
+                            &.is-loading {
+                                @include termeh.loader-color($color);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
