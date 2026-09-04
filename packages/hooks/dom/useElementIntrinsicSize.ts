@@ -2,14 +2,20 @@
 
 import { useCallback, useRef, useState } from "react";
 import {
-    getElementBounding,
+    getElementIntrinsicSize,
     retainOrReplace,
-    type ElementRect,
+    type ElementSize,
 } from "../../utils";
 import { useIsomorphicLayoutEffect } from "../react";
 
-export interface UseElementBoundingOptions {
-    /** Whether to round the bounding box values to the nearest integer. */
+export interface UseElementIntrinsicSizeOptions<T extends HTMLElement> {
+    /**
+     * The scrollable container element that may affect the intrinsic size of
+     * the tracked element.
+     */
+    scroller?: T | null;
+
+    /** Whether to round the intrinsic size values to the nearest integer. */
     round?: boolean;
 
     /**
@@ -26,52 +32,48 @@ export interface UseElementBoundingOptions {
 }
 
 /**
- * Tracks the bounding box of a DOM element and refreshes it when the element,
- * its styles, or the viewport changes.
+ * Tracks the intrinsic size (width and height) of a DOM element and provides an
+ * update function to manually refresh the size.
  *
- * @param element - The element to measure.
- * @param options - Tracking behavior options.
- * @returns The current bounds and an `update` function that forces a refresh.
+ * @param element The DOM element whose intrinsic size is being tracked.
+ * @param param1 The options for tracking the element's intrinsic size.
+ * @returns An object containing the element's width, height, and an `update`
+ *   function to manually refresh the size.
  */
-export function useElementBounding<T extends HTMLElement>(
+export function useElementIntrinsicSize<T extends HTMLElement>(
     element: T | null,
     {
+        scroller,
         round = false,
         reset = true,
         windowResize = true,
         windowScroll = true,
-    }: UseElementBoundingOptions = {}
-): ElementRect & { update: () => void } {
+    }: UseElementIntrinsicSizeOptions<T> = {}
+): ElementSize & { update: () => void } {
     const rafRef = useRef<number | null>(null);
-    const [rect, setRect] = useState(getEmptyBounding);
+    const [rect, setRect] = useState(getEmptySize);
 
     const update = useCallback(() => {
         if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
 
         if (!element) {
-            if (reset)
-                setRect((prev) => retainOrReplace(prev, getEmptyBounding()));
+            if (reset) setRect((prev) => retainOrReplace(prev, getEmptySize()));
             return;
         }
 
         rafRef.current = requestAnimationFrame(() => {
-            const rect = getElementBounding(element);
-
+            const sizes = getElementIntrinsicSize(
+                element,
+                scroller ?? undefined
+            );
             setRect((prev) =>
-                retainOrReplace(
-                    prev,
-                    Object.fromEntries(
-                        Object.entries(rect).map(([key, value]) => [
-                            key,
-                            typeof value === "number" && round
-                                ? Math.round(value)
-                                : value,
-                        ])
-                    ) as ElementRect
-                )
+                retainOrReplace(prev, {
+                    width: round ? Math.round(sizes.width) : sizes.width,
+                    height: round ? Math.round(sizes.height) : sizes.height,
+                })
             );
         });
-    }, [element, round, reset]);
+    }, [element, scroller, round, reset]);
 
     useIsomorphicLayoutEffect(() => {
         update();
@@ -118,21 +120,9 @@ export function useElementBounding<T extends HTMLElement>(
     };
 }
 
-function getEmptyBounding(): ElementRect {
+function getEmptySize(): ElementSize {
     return {
-        x: 0,
-        y: 0,
-        top: 0,
-        right: 0,
-        bottom: 0,
-        left: 0,
         width: 0,
         height: 0,
-        get centerX() {
-            return 0;
-        },
-        get centerY() {
-            return 0;
-        },
     };
 }

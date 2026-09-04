@@ -195,8 +195,14 @@ export interface ScrollState {
     isRightEdgeReached: boolean;
 }
 
+/** Represents the size of an element. */
+export interface ElementSize {
+    width: number;
+    height: number;
+}
+
 /** Represents the bounding rectangle of an element. */
-export interface ElementRect {
+export interface ElementRect extends ElementSize {
     x: number;
     y: number;
 
@@ -204,9 +210,6 @@ export interface ElementRect {
     right: number;
     bottom: number;
     left: number;
-
-    width: number;
-    height: number;
 
     readonly centerX: number;
     readonly centerY: number;

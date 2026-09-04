@@ -1,5 +1,10 @@
 import { IS_CLIENT } from "./constants";
-import type { ElementRect, ScrollState, ViewportMetrics } from "./type";
+import type {
+    ElementRect,
+    ElementSize,
+    ScrollState,
+    ViewportMetrics,
+} from "./type";
 
 /**
  * Retrieves the `content` attribute of a `<meta>` tag with the given name.
@@ -156,6 +161,39 @@ export function getElementBounding(element: HTMLElement): ElementRect {
         get centerY() {
             return rect.top + rect.height / 2;
         },
+    };
+}
+
+/**
+ * Computes the intrinsic size of a given HTMLElement, accounting for overflow
+ * within an optional scrollable element.
+ *
+ * @param root - The root HTMLElement whose intrinsic size is evaluated.
+ * @param scroller - An optional scrollable HTMLElement whose overflow should be
+ *   included. Defaults to the root element.
+ * @returns An object containing the intrinsic width and height of the element.
+ */
+export function getElementIntrinsicSize(
+    root: HTMLElement,
+    scroller: HTMLElement = root
+): ElementSize {
+    if (root === scroller) {
+        return {
+            width: scroller.scrollWidth,
+            height: scroller.scrollHeight,
+        };
+    }
+
+    const rootRect = root.getBoundingClientRect();
+
+    return {
+        width:
+            rootRect.width +
+            Math.max(0, scroller.scrollWidth - scroller.clientWidth),
+
+        height:
+            rootRect.height +
+            Math.max(0, scroller.scrollHeight - scroller.clientHeight),
     };
 }
 
