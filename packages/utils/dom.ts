@@ -239,3 +239,16 @@ export function getViewportMetrics(): ViewportMetrics {
         preferredAccessibleHeight,
     };
 }
+
+/**
+ * Converts a value in rem units to pixels.
+ *
+ * @param amount The number of rem units to convert to pixels. If not provided,
+ *   defaults to 1.
+ * @returns The equivalent pixel value of the specified rem units.
+ */
+export function getRem(amount?: number): number {
+    const root = document.documentElement;
+    const rem = parseFloat(getComputedStyle(root).fontSize);
+    return rem * (amount ?? 1);
+}

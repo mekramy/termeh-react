@@ -3,6 +3,7 @@ export * from "./useAutoFocus";
 export * from "./useAutoSelect";
 export * from "./useElementBounding";
 export * from "./useElementIntrinsicSize";
+export * from "./useRem";
 export * from "./useScrollState";
 export * from "./useShortcut";
 export * from "./useVisualViewport";
