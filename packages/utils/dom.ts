@@ -184,16 +184,17 @@ export function getElementIntrinsicSize(
         };
     }
 
-    const rootRect = root.getBoundingClientRect();
+    const rect = root.getBoundingClientRect();
+
+    const extraWidth = Math.max(0, scroller.scrollWidth - scroller.clientWidth);
+    const extraHeight = Math.max(
+        0,
+        scroller.scrollHeight - scroller.clientHeight
+    );
 
     return {
-        width:
-            rootRect.width +
-            Math.max(0, scroller.scrollWidth - scroller.clientWidth),
-
-        height:
-            rootRect.height +
-            Math.max(0, scroller.scrollHeight - scroller.clientHeight),
+        width: Math.floor(rect.width) + extraWidth,
+        height: Math.floor(rect.height) + extraHeight,
     };
 }
 

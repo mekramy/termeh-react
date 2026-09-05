@@ -15,9 +15,6 @@ export interface UseElementIntrinsicSizeOptions<T extends HTMLElement> {
      */
     scroller?: T | null;
 
-    /** Whether to round the intrinsic size values to the nearest integer. */
-    round?: boolean;
-
     /**
      * Reset the tracked bounds to zero when the element is removed or unset.
      * Default: `true`.
@@ -44,7 +41,6 @@ export function useElementIntrinsicSize<T extends HTMLElement>(
     element: T | null,
     {
         scroller,
-        round = false,
         reset = true,
         windowResize = true,
         windowScroll = true,
@@ -62,18 +58,14 @@ export function useElementIntrinsicSize<T extends HTMLElement>(
         }
 
         rafRef.current = requestAnimationFrame(() => {
-            const sizes = getElementIntrinsicSize(
-                element,
-                scroller ?? undefined
-            );
             setRect((prev) =>
-                retainOrReplace(prev, {
-                    width: round ? Math.round(sizes.width) : sizes.width,
-                    height: round ? Math.round(sizes.height) : sizes.height,
-                })
+                retainOrReplace(
+                    prev,
+                    getElementIntrinsicSize(element, scroller ?? undefined)
+                )
             );
         });
-    }, [element, scroller, round, reset]);
+    }, [element, scroller, reset]);
 
     useIsomorphicLayoutEffect(() => {
         update();
