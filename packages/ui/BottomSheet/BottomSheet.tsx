@@ -9,6 +9,7 @@ import {
 import {
     useBottomSheet,
     useScrollState,
+    useStableCallback,
     useTouchAction,
     useVisualViewport,
     type UseBottomSheetOptions,
@@ -28,11 +29,46 @@ export type BottomSheetRef = {
 
 type BaseProps = HTMLAttributes<HTMLDivElement> &
     Omit<UseBottomSheetOptions, "viewport" | "fastClose"> & {
+        /**
+         * The ref object that allows imperative control over the bottom sheet
+         * (close, restore, expand).
+         */
         ref?: Ref<BottomSheetRef>;
-        height?: number;
+
+        /**
+         * Whether to enable the scroll fade effect at the top and bottom of the
+         * content.
+         */
         scrollFade?: boolean;
+
+        /** The click event handler for the bottom sheet wrapper element. */
+        onWrapperClick?: (props: SlotProps) => void;
+
+        /**
+         * The render function for the body slot of the bottom sheet. It
+         * receives the current state and control functions as props.
+         *
+         * @param props The slot props containing state and control functions.
+         * @returns The React node to render inside the body slot.
+         */
         body: (props: SlotProps) => ReactNode;
+
+        /**
+         * The render function for the header slot of the bottom sheet. It
+         * receives the current state and control functions as props.
+         *
+         * @param props The slot props containing state and control functions.
+         * @returns The React node to render inside the header slot.
+         */
         header?: (props: SlotProps) => ReactNode;
+
+        /**
+         * The render function for the actions slot of the bottom sheet. It
+         * receives the current state and control functions as props.
+         *
+         * @param props The slot props containing state and control functions.
+         * @returns The React node to render inside the actions slot.
+         */
         actions?: (props: SlotProps) => ReactNode;
     };
 
@@ -55,8 +91,8 @@ export function BottomSheet({
     onExpand,
     onClose,
     ref,
-    height: defaultHeight,
     scrollFade = true,
+    onWrapperClick,
     header,
     body,
     actions,
@@ -72,8 +108,6 @@ export function BottomSheet({
         fallback: "none",
     });
 
-    const sheetHeight = defaultHeight ?? viewport.maxAccessibleHeight;
-
     const {
         state,
         progress,
@@ -87,7 +121,7 @@ export function BottomSheet({
         onPanStart,
         onPanEnd,
     } = useBottomSheet({
-        viewport: { ...viewport, maxAccessibleHeight: sheetHeight },
+        viewport,
         gap,
         expandable,
         closable,
@@ -116,6 +150,16 @@ export function BottomSheet({
         expand,
     };
 
+    const handleWrapperClick = useStableCallback<
+        React.MouseEventHandler<HTMLDivElement>
+    >((e) => {
+        if (!onWrapperClick || e.target !== e.currentTarget) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+        onWrapperClick(props);
+    });
+
     useImperativeHandle(
         ref,
         () => ({
@@ -129,6 +173,7 @@ export function BottomSheet({
     return (
         <motion.div
             className="bottom-sheet-wrapper"
+            onClick={handleWrapperClick}
             onPan={onPan}
             onPanStart={onPanStart}
             onPanEnd={onPanEnd}
