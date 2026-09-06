@@ -154,10 +154,6 @@
                         border-top: 1px solid $separator;
                     }
 
-                    &.is-fit {
-                        flex: none;
-                    }
-
                     &.is-loading {
                         @include termeh.loader(
                             $line-height,

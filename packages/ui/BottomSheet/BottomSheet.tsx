@@ -9,7 +9,6 @@ import {
 import {
     useBottomSheet,
     useScrollState,
-    useStableCallback,
     useTouchAction,
     useVisualViewport,
     type UseBottomSheetOptions,
@@ -36,13 +35,16 @@ type BaseProps = HTMLAttributes<HTMLDivElement> &
         ref?: Ref<BottomSheetRef>;
 
         /**
+         * Whether the bottom sheet should fit its content within the available
+         * height.
+         */
+        fit?: boolean;
+
+        /**
          * Whether to enable the scroll fade effect at the top and bottom of the
          * content.
          */
         scrollFade?: boolean;
-
-        /** The click event handler for the bottom sheet wrapper element. */
-        onWrapperClick?: (props: SlotProps) => void;
 
         /**
          * The render function for the body slot of the bottom sheet. It
@@ -91,8 +93,8 @@ export function BottomSheet({
     onExpand,
     onClose,
     ref,
+    fit = false,
     scrollFade = true,
-    onWrapperClick,
     header,
     body,
     actions,
@@ -150,16 +152,6 @@ export function BottomSheet({
         expand,
     };
 
-    const handleWrapperClick = useStableCallback<
-        React.MouseEventHandler<HTMLDivElement>
-    >((e) => {
-        if (!onWrapperClick || e.target !== e.currentTarget) return;
-
-        e.preventDefault();
-        e.stopPropagation();
-        onWrapperClick(props);
-    });
-
     useImperativeHandle(
         ref,
         () => ({
@@ -173,11 +165,15 @@ export function BottomSheet({
     return (
         <motion.div
             className="bottom-sheet-wrapper"
-            onClick={handleWrapperClick}
             onPan={onPan}
             onPanStart={onPanStart}
             onPanEnd={onPanEnd}
-            style={{ y, height, opacity, touchAction }}
+            style={{
+                y,
+                opacity,
+                touchAction,
+                ...(fit ? { maxHeight: height } : { height }),
+            }}
         >
             <div
                 {...divProps}
