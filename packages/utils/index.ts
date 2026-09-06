@@ -5,6 +5,7 @@ export * from "./form";
 export * from "./inliner";
 export * from "./key";
 export * from "./merge";
+export * from "./notifier";
 export * from "./number";
 export * from "./object";
 export * from "./string";
