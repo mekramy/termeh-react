@@ -1,6 +1,7 @@
 import { useTransform } from "motion/react";
 import { useCallback, useRef } from "react";
 import { type ViewportMetrics } from "../../utils";
+import { useComputed } from "../react";
 import {
     useMotionPanSnap,
     type UseMotionPanSnapOptions,
@@ -12,7 +13,11 @@ const EXPANDED_IDX = 0;
 const STATES: readonly BottomSheetState[] = ["expanded", "normal", "closed"];
 
 /** The current state of the bottom sheet. */
-type BottomSheetState = "closed" | "normal" | "expanded";
+export type BottomSheetState = "closed" | "normal" | "expanded";
+
+/** The current stage of the bottom sheet interaction. */
+export type BottomSheetStage =
+    "idle" | "dragging" | "opening" | "closing" | "expanding" | "restoring";
 
 /** Configuration options for the useBottomSheet hook. */
 export interface UseBottomSheetOptions extends Omit<
@@ -151,8 +156,10 @@ export function useBottomSheet({
     const {
         isMounted,
         snap,
+        stage: snapStage,
 
-        next,
+        origin,
+        candidate,
         target,
         position,
         progress,
@@ -176,12 +183,12 @@ export function useBottomSheet({
             if (enterAnimation) snapTo(NORMAL_IDX);
             onOpen?.();
         },
-        swipeGuard: ({ next }) => {
-            if (next === EXPANDED_IDX && !expandable) {
+        swipeGuard: ({ candidate }) => {
+            if (candidate === EXPANDED_IDX && !expandable) {
                 return false;
             }
 
-            if (next === CLOSED_IDX && !closable) {
+            if (candidate === CLOSED_IDX && !closable) {
                 return false;
             }
 
@@ -232,13 +239,28 @@ export function useBottomSheet({
 
     // Stats
     const state = STATES[snap];
-    const height = useTransform([next, position], () =>
-        next.get() === CLOSED_IDX
+    const stage = useComputed<BottomSheetStage>(() => {
+        const from = origin.get();
+        const to = target.get();
+
+        if (snapStage === "dragging") return "dragging";
+        if (from === to) return "idle";
+        if (snapStage === "snapping") {
+            if (from === CLOSED_IDX && to !== CLOSED_IDX) return "opening";
+            if (to === CLOSED_IDX) return "closing";
+            if (to === EXPANDED_IDX) return "expanding";
+            if (to === NORMAL_IDX) return "restoring";
+        }
+        return "idle";
+    }, [snapStage, origin.get(), target.get()]);
+
+    const height = useTransform([candidate, position], () =>
+        candidate.get() === CLOSED_IDX
             ? maxAccessibleHeight
             : viewportHeight - position.get()
     );
-    const y = useTransform([next, position], () =>
-        next.get() === CLOSED_IDX ? position.get() - normalY : 0
+    const y = useTransform([candidate, position], () =>
+        candidate.get() === CLOSED_IDX ? position.get() - normalY : 0
     );
     const opacity = useTransform([progress, target], () => {
         const [min, max] = opacityRange;
@@ -258,6 +280,7 @@ export function useBottomSheet({
 
     return {
         state,
+        stage,
         progress,
 
         y,

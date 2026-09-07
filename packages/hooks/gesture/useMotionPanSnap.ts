@@ -28,10 +28,13 @@ const defaultTransition: ValueAnimationTransition = {
 } as const;
 
 /** The axis on which pan interaction is enabled. */
-type Axis = "x" | "y";
+export type Axis = "x" | "y";
 
 /** The direction of movement relative to the ordered snap points. */
-type PanOrientation = "forward" | "backward" | "none";
+export type PanOrientation = "forward" | "backward" | "none";
+
+/** The status of the motion pan snap interaction. */
+export type MotionPanSnapStage = "idle" | "dragging" | "snapping";
 
 /** Defines the thresholds and elastic bounds associated with a snap point. */
 interface Region {
@@ -61,8 +64,8 @@ interface SwipeContext {
     /** The snap point where the gesture started. */
     origin: number;
 
-    /** The next snap point in the gesture direction. */
-    next: number;
+    /** The candidate snap point in the gesture direction. */
+    candidate: number;
 
     /** The snap point the gesture is currently targeting. */
     target: number;
@@ -200,7 +203,7 @@ export interface UseMotionPanSnapOptions {
  * elastic guards, custom fast-swipe handling, and animated snapping.
  *
  * The returned motion values expose the current snap index, gesture origin,
- * next and target snap indices, snap distance, position, and normalized
+ * candidate and target snap indices, snap distance, position, and normalized
  * progress. It also provides controls for snapping and resetting, together with
  * the pan gesture handlers and mount state.
  *
@@ -288,8 +291,9 @@ export function useMotionPanSnap({
 
     /** Global states and Motion values */
     const [snap, setSnap] = useState(initial);
+    const [stage, setStage] = useState<MotionPanSnapStage>("idle");
     const origin = useMotionValue(initial);
-    const next = useMotionValue(initial);
+    const candidate = useMotionValue(initial);
     const target = useMotionValue(initial);
     const steps = useMotionValue(0);
     const position = useMotionValue(regions[initial]?.position ?? 0);
@@ -326,9 +330,12 @@ export function useMotionPanSnap({
             const version = nextVersion();
             animationDestinationRef.current = destination;
 
+            if (anim) setStage("snapping");
+
             const onComplete = () => {
                 if (!isMounted() || !verifyVersion(version)) return;
 
+                setStage("idle");
                 animationControlsRef.current = null;
                 animationDestinationRef.current = null;
                 callback?.();
@@ -366,12 +373,13 @@ export function useMotionPanSnap({
                 return;
 
             if (clamped !== perv) setSnap(clamped);
+            target.set(clamped);
 
             _animateTo(destination, animate, () => {
                 if (clamped !== perv) onSnap?.(perv, clamped);
 
-                next.set(clamped);
-                target.set(clamped);
+                origin.set(clamped);
+                candidate.set(clamped);
                 steps.set(0);
             });
         }
@@ -383,6 +391,7 @@ export function useMotionPanSnap({
             isDraggingRef.current = false;
             contextCacheRef.current = null;
             if (index !== undefined) _snapTo(index);
+            else setStage("idle");
         },
         [_snapTo]
     );
@@ -413,7 +422,13 @@ export function useMotionPanSnap({
         if (destination === undefined) return;
 
         position.set(destination.position);
-        if (clamped !== snap) setSnap(clamped);
+        if (clamped !== snap) {
+            setSnap(clamped);
+            origin.set(clamped);
+            candidate.set(clamped);
+            target.set(clamped);
+            steps.set(0);
+        }
     });
 
     /** Update position on initial change */
@@ -425,7 +440,7 @@ export function useMotionPanSnap({
 
         setSnap(newInitial);
         origin.set(newInitial);
-        next.set(newInitial);
+        candidate.set(newInitial);
         target.set(newInitial);
         steps.set(0);
         position.set(destination.position);
@@ -437,6 +452,7 @@ export function useMotionPanSnap({
             if (disabled) return _finishGesture();
 
             _stopAnimations();
+            setStage("dragging");
             isDraggingRef.current = true;
             contextCacheRef.current = null;
             startValueRef.current = position.get();
@@ -460,7 +476,7 @@ export function useMotionPanSnap({
                 pointerType: info.pointerType,
             };
 
-            let _next: number = 0,
+            let _candidate: number = 0,
                 _target: number = 0,
                 _steps: number = 0,
                 _min: number = 0,
@@ -475,7 +491,7 @@ export function useMotionPanSnap({
                 _cached.direction === _pointInfo.direction &&
                 _cached.orientation === _pointInfo.orientation
             ) {
-                _next = _cached.next;
+                _candidate = _cached.candidate;
                 _target = _cached.target;
                 _steps = _cached.steps;
                 _min = _cached.min;
@@ -497,7 +513,7 @@ export function useMotionPanSnap({
                     );
                 }
 
-                _next = _pointInfo.next;
+                _candidate = _pointInfo.candidate;
                 _target = _pointInfo.target;
                 _steps = _pointInfo.steps;
                 _min = contextCacheRef.current.min;
@@ -517,7 +533,7 @@ export function useMotionPanSnap({
                     _elastic
                 )
             );
-            next.set(_next);
+            candidate.set(_candidate);
             target.set(_target);
             steps.set(_steps);
         },
@@ -565,9 +581,9 @@ export function useMotionPanSnap({
             /** Override the normal target by velocity */
             if (
                 Math.abs(_velocity) >= velocityThreshold &&
-                resolved.next !== snap
+                resolved.candidate !== snap
             ) {
-                resolved.target = resolved.next;
+                resolved.target = resolved.candidate;
                 resolved.steps = Math.abs(resolved.target - resolved.origin);
             }
 
@@ -580,10 +596,10 @@ export function useMotionPanSnap({
 
             if (
                 resolved.target === snap &&
-                resolved.next !== snap &&
+                resolved.candidate !== snap &&
                 !isElastic
             ) {
-                onCancel?.(snap, resolved.next);
+                onCancel?.(snap, resolved.candidate);
             }
 
             _finishGesture(resolved.target);
@@ -592,8 +608,10 @@ export function useMotionPanSnap({
 
     return {
         snap,
+        stage,
+
         origin,
-        next,
+        candidate,
         target,
         steps,
         position,
@@ -623,7 +641,7 @@ function resolveDirection(
     return ["none", "none"];
 }
 
-function findNext(
+function findCandidate(
     position: number,
     orientation: PanOrientation,
     regions: readonly Region[]
@@ -670,7 +688,7 @@ function resolvePoints(
     origin: number,
     regions: readonly Region[]
 ): {
-    next: number;
+    candidate: number;
     target: number;
     steps: number;
     direction: PanDirection;
@@ -681,18 +699,18 @@ function resolvePoints(
 
     if (length === 0 || direction === "none" || origin < 0 || origin >= length)
         return {
-            next: origin,
+            candidate: origin,
             target: origin,
             steps: 0,
             direction,
             orientation,
         };
 
-    const next = findNext(position, orientation, regions);
-    if (next === origin)
+    const candidate = findCandidate(position, orientation, regions);
+    if (candidate === origin)
         return {
-            next,
-            target: next,
+            candidate,
+            target: candidate,
             steps: 0,
             direction,
             orientation,
@@ -701,7 +719,7 @@ function resolvePoints(
     const target = findTarget(position, orientation, regions);
     if (target === undefined) {
         return {
-            next,
+            candidate,
             target: origin,
             steps: 0,
             direction,
@@ -710,7 +728,7 @@ function resolvePoints(
     }
 
     return {
-        next,
+        candidate,
         target,
         steps: Math.abs(target - origin),
         direction,
