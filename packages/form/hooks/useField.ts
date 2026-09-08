@@ -219,32 +219,17 @@ export function useField<T = unknown>(
         [setValue]
     );
 
-    return useMemo(
-        () => ({
-            id,
-            ref,
-            element,
-            value,
-            isTouched,
-            errors,
-            isValid,
-            isFailed,
-            reset,
-            setValue,
-            onChange,
-        }),
-        [
-            id,
-            ref,
-            element,
-            value,
-            isTouched,
-            errors,
-            isValid,
-            isFailed,
-            reset,
-            setValue,
-            onChange,
-        ]
-    );
+    return {
+        id,
+        ref,
+        element,
+        value,
+        isTouched,
+        errors,
+        isValid,
+        isFailed,
+        reset,
+        setValue,
+        onChange,
+    };
 }

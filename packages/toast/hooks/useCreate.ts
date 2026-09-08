@@ -1,11 +1,4 @@
-import {
-    useCallback,
-    useContext,
-    useEffect,
-    useMemo,
-    useRef,
-    useState,
-} from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useRefCallback, useStableCallback } from "../../hooks";
 import { classNames, IS_CLIENT, IS_SSR } from "../../utils";
 import { ProviderContext, ToastContext } from "../internal/context";
@@ -140,42 +133,22 @@ export function useCreate() {
         [isAlive, loading, scheduleClose, toast.options]
     );
 
-    return useMemo(
-        () => ({
-            ref,
-            id: toast.id,
-            mode: toast.mode,
-            state: toast.state,
-            isSticky: toast.isSticky,
-            isClosable: toast.isClosable,
-            isClickable: toast.isClickable,
-            isAutoClosing: toast.isAutoClosing,
-            isPaused: paused,
-            isLoading: loading,
-            stateClasses,
-            progress,
-            close,
-            pause,
-            resume,
-            action,
-        }),
-        [
-            ref,
-            toast.id,
-            toast.mode,
-            toast.state,
-            toast.isSticky,
-            toast.isClosable,
-            toast.isClickable,
-            toast.isAutoClosing,
-            paused,
-            loading,
-            stateClasses,
-            progress,
-            close,
-            pause,
-            resume,
-            action,
-        ]
-    );
+    return {
+        ref,
+        id: toast.id,
+        mode: toast.mode,
+        state: toast.state,
+        isSticky: toast.isSticky,
+        isClosable: toast.isClosable,
+        isClickable: toast.isClickable,
+        isAutoClosing: toast.isAutoClosing,
+        isPaused: paused,
+        isLoading: loading,
+        stateClasses,
+        progress,
+        close,
+        pause,
+        resume,
+        action,
+    };
 }
