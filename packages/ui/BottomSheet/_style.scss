@@ -75,7 +75,7 @@
                             display: block;
                             border-radius: 9999px;
                             background: $grabber;
-                            width: 4rem;
+                            width: 3rem;
                             height: termeh.half($gap-micro);
                         }
                     }
@@ -86,6 +86,7 @@
                         flex-flow: row wrap;
                         align-items: center;
                         touch-action: none;
+                        gap: $gap-micro;
                         padding: termeh.half($padding) $padding;
                         border-bottom: 1px solid $separator;
 
