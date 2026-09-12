@@ -1,0 +1,201 @@
+@use "sass:color";
+@use "termeh";
+
+@mixin use($colors: null, $sizes: null) {
+    $colors: termeh.list-safe($colors, "use-modal", "colors", ());
+    $sizes: termeh.map-safe($sizes, "use-modal", "sizes", ());
+
+    $decorator: termeh.var("decorator", "size", 2px);
+    $gap-micro: termeh.var("gap", "micro", 8px);
+    $gap-macro: termeh.var("gap", "macro", 1.6em);
+    $line-height: termeh.var("line-height", "normal", 1.6em);
+
+    $fallback-radius: termeh.var("radius", "normal");
+    $fallback-background: termeh.var("base", "color", white);
+    $fallback-foreground: termeh.var("base", "foreground", black);
+    $fallback-separator: termeh.var("base", "separator", #e0e4eb);
+
+    $background: termeh.var("modal", "background", $fallback-background);
+    $foreground: termeh.var("modal", "foreground", $fallback-foreground);
+    $separator: termeh.var("modal", "separator", $fallback-separator);
+    $shadow: termeh.var("modal", "shadow", none);
+
+    $radius: termeh.var("modal", "radius", $fallback-radius);
+    $padding: termeh.var("modal", "padding", $gap-macro);
+
+    $primary: termeh.color("primary");
+    $primary-readable: color.mix($foreground, $primary, 20%);
+    $primary-foreground: termeh.variant("primary", "foreground");
+
+    @at-root {
+        .tm-dimmer .tm-container .tm-item {
+            .modal {
+                display: flex;
+                flex-direction: column;
+                align-items: stretch;
+                position: relative;
+                border-radius: $radius;
+                color: $foreground;
+                background: $background;
+                box-shadow: $shadow;
+                max-width: 100%;
+                max-height: 100%;
+
+                .modal-header-wrapper,
+                .modal-footer-wrapper {
+                    flex: none;
+                    position: sticky;
+                    overflow: visible;
+                    touch-action: none;
+                    box-sizing: border-box;
+                    z-index: 1;
+
+                    .modal-fade-wrapper {
+                        position: relative;
+                        overflow: visible;
+                        pointer-events: none;
+                        height: 0;
+
+                        .scroll-fade {
+                            display: block;
+                            position: absolute;
+                            height: 0;
+                            width: 100%;
+
+                            &.is-active {
+                                height: $padding * 2;
+                            }
+                        }
+                    }
+                }
+
+                .modal-header-wrapper {
+                    top: 0;
+
+                    .modal-fade-wrapper .scroll-fade {
+                        top: 100%;
+                        background: linear-gradient(
+                            to top,
+                            transparent -50%,
+                            $background 95%
+                        );
+                    }
+
+                    &.has-header {
+                        background: $background;
+
+                        .modal-header {
+                            display: flex;
+                            flex-direction: row;
+                            align-items: center;
+                            gap: $gap-micro;
+                            padding: termeh.half($padding) $padding;
+                            border-bottom: 1px solid $separator;
+
+                            h1,
+                            h2,
+                            h3,
+                            h4,
+                            h5,
+                            h6 {
+                                flex: 1;
+                                font-size: 1em;
+                                font-weight: 500;
+                                line-height: $line-height;
+                                @include termeh.marginless();
+                            }
+
+                            > .icon.is-close {
+                                flex: none;
+                                cursor: pointer;
+
+                                &:hover {
+                                    transform: scale(1.2);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                .modal-footer-wrapper {
+                    bottom: 0;
+
+                    .modal-fade-wrapper .scroll-fade {
+                        bottom: 100%;
+                        background: linear-gradient(
+                            to bottom,
+                            transparent -50%,
+                            $background 95%
+                        );
+                    }
+
+                    &.has-actions {
+                        background: $background;
+
+                        .actions {
+                            padding: termeh.half($padding) $padding;
+                            border-top: 1px solid $separator;
+                        }
+                    }
+                }
+
+                .modal-content {
+                    flex: 1 1 auto;
+                    padding: $padding;
+                    box-sizing: border-box;
+                }
+
+                &.is-loading {
+                    @include termeh.loader($line-height, $primary, $decorator);
+
+                    > * {
+                        opacity: 0;
+                    }
+                }
+
+                @each $name, $size in $sizes {
+                    &.is-#{$name} {
+                        width: $size;
+                    }
+                }
+
+                @each $name, $color in termeh.colors($colors) {
+                    &.is-#{$name} {
+                        &.is-loading {
+                            @include termeh.loader-color($color);
+                        }
+                    }
+                }
+            }
+
+            &:not(.is-active) {
+                position: absolute;
+                inset: 0;
+                bottom: 0;
+                width: 100%;
+                overflow: hidden;
+
+                display: flex;
+                flex-direction: column;
+                align-items: stretch;
+                justify-content: flex-start;
+                transform-origin: top center;
+
+                .modal,
+                .bottom-sheet {
+                    overflow: hidden;
+                    width: 100% !important;
+
+                    > * {
+                        opacity: 0.85;
+                        filter: grayscale(0.85) blur(1px);
+                    }
+                }
+
+                @include termeh.mobile() {
+                    bottom: 0;
+                }
+            }
+        }
+    }
+}

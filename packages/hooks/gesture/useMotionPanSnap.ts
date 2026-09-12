@@ -374,12 +374,12 @@ export function useMotionPanSnap({
 
             if (clamped !== perv) setSnap(clamped);
             target.set(clamped);
+            candidate.set(clamped);
 
             _animateTo(destination, animate, () => {
                 if (clamped !== perv) onSnap?.(perv, clamped);
 
                 origin.set(clamped);
-                candidate.set(clamped);
                 steps.set(0);
             });
         }

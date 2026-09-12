@@ -116,23 +116,23 @@
                             position: absolute;
                             touch-action: none;
                             width: 100%;
-                            height: $padding * 3;
+                            height: $padding * 2;
 
                             &.is-top {
                                 top: 0;
                                 background: linear-gradient(
-                                    to bottom,
-                                    $background,
-                                    transparent
+                                    to top,
+                                    transparent -50%,
+                                    $background 95%
                                 );
                             }
 
                             &.is-bottom {
                                 bottom: 0;
                                 background: linear-gradient(
-                                    to top,
-                                    $background,
-                                    transparent
+                                    to bottom,
+                                    transparent -50%,
+                                    $background 95%
                                 );
                             }
 

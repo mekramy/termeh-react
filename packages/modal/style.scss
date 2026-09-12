@@ -1,0 +1,14 @@
+@use "sass:color";
+@use "termeh";
+@use "./scss/dimmer";
+@use "./scss/modal";
+
+@mixin use-modal($colors: null, $sizes: null) {
+    @if not termeh.module-presented("modal") {
+        @include termeh.require("modal", "icon");
+        @include termeh.require("modal", "bottom-sheet");
+        @include dimmer.use();
+        @include modal.use($colors, $sizes);
+        @include termeh.present-module("modal");
+    }
+}

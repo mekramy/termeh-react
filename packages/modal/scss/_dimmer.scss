@@ -1,0 +1,83 @@
+@use "sass:color";
+@use "termeh";
+
+@mixin use() {
+    $gap-macro: termeh.var("gap", "macro", 1.6em);
+
+    $fallback-overlay-background: termeh.var("overlay", "background");
+    $fallback-overlay-opacity: termeh.var("overlay", "opacity", 1);
+    $fallback-overlay-filter: termeh.var("overlay", "filter", none);
+
+    $overlay-opacity: termeh.var(
+        "modal",
+        "overlay-opacity",
+        $fallback-overlay-opacity
+    );
+    $overlay-background: rgba(
+        termeh.var("modal", "overlay-background", $fallback-overlay-background),
+        $overlay-opacity
+    );
+    $overlay-filter: termeh.var(
+        "modal",
+        "overlay-filter",
+        $fallback-overlay-filter
+    );
+
+    $z-index: termeh.var("z-index", "modal", 99);
+    $padding: termeh.var("modal", "padding", $gap-macro);
+
+    @at-root {
+        .tm-dimmer {
+            inset: 0;
+            display: flex;
+            position: fixed;
+            overflow: hidden;
+            overflow-y: auto;
+            z-index: $z-index;
+            box-sizing: border-box;
+            backdrop-filter: $overlay-filter;
+            background: rgba($overlay-background, $overlay-opacity);
+
+            &.is-sub {
+                position: absolute;
+            }
+
+            &.is-empty {
+                display: none;
+            }
+
+            > .tm-container {
+                display: flex;
+                margin: auto;
+                max-width: 100%;
+                position: relative;
+                box-sizing: border-box;
+
+                .tm-item {
+                    display: flex;
+                    padding: $padding;
+                    max-width: 100%;
+                    box-sizing: border-box;
+                }
+            }
+
+            @include termeh.mobile() {
+                overflow-y: hidden;
+                align-items: flex-end;
+                justify-content: stretch;
+
+                > .tm-container {
+                    margin: 0;
+                    width: 100%;
+                    max-height: 100%;
+
+                    .tm-item {
+                        padding: 0;
+                        width: 100%;
+                        max-height: 100%;
+                    }
+                }
+            }
+        }
+    }
+}

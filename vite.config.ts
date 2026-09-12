@@ -82,6 +82,16 @@ export default defineConfig({
                     dest: ".",
                     rename: { stripBase: 1 },
                 },
+                {
+                    src: "./packages/modal/style.scss",
+                    dest: ".",
+                    rename: { stripBase: 1 },
+                },
+                {
+                    src: "./packages/modal/scss",
+                    dest: ".",
+                    rename: { stripBase: 1 },
+                },
             ],
         }),
     ],

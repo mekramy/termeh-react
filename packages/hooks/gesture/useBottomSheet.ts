@@ -1,5 +1,5 @@
 import { useTransform } from "motion/react";
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useState } from "react";
 import { type ViewportMetrics } from "../../utils";
 import { useComputed } from "../react";
 import {
@@ -150,6 +150,9 @@ export function useBottomSheet({
     const points = [expandedY, normalY, closedY];
 
     /** Handle enter animation */
+    const [initial] = useState(() =>
+        enterAnimation ? CLOSED_IDX : NORMAL_IDX
+    );
     const entering = useRef(enterAnimation);
 
     // Core Api
@@ -171,7 +174,7 @@ export function useBottomSheet({
     } = useMotionPanSnap({
         axis: "y",
         points,
-        initial: enterAnimation ? CLOSED_IDX : NORMAL_IDX,
+        initial,
         elastic,
         disabled,
         threshold,
