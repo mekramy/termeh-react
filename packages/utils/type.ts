@@ -11,6 +11,9 @@ export type Maybe<T> = T | null | undefined;
 export type PrimitiveType =
     string | number | boolean | bigint | symbol | null | undefined;
 
+/** Represents a function that performs cleanup or teardown, or `void`. */
+export type Destructor = void | (() => void);
+
 /**
  * Represents a compound value composed from primitives:
  *
@@ -20,6 +23,16 @@ export type PrimitiveType =
  */
 export type CompoundType =
     PrimitiveType | PrimitiveType[] | Record<string, PrimitiveType>;
+
+/**
+ * Checks whether a value is `undefined`.
+ *
+ * @param v - The value to test.
+ * @returns `true` when `v` is `undefined`, otherwise `false`.
+ */
+export function isUndefined(v: unknown): v is undefined {
+    return typeof v === "undefined";
+}
 
 /**
  * Checks whether a value is a string.
@@ -222,4 +235,20 @@ export interface ViewportMetrics {
     scale: number;
     maxAccessibleHeight: number;
     preferredAccessibleHeight: number;
+}
+
+/** Represents the bounding limits of an element or viewport. */
+export interface Bounds {
+    top: number;
+    left: number;
+    right: number;
+    bottom: number;
+}
+
+/** Represents the clipping state of an element. */
+export interface Clipping {
+    isClippedTop: boolean;
+    isClippedBottom: boolean;
+    isClippedLeft: boolean;
+    isClippedRight: boolean;
 }

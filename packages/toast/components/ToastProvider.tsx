@@ -9,7 +9,7 @@ import {
     type ReactNode,
 } from "react";
 import { useHasFinePointer } from "../../mq";
-import { classNames } from "../../utils";
+import { classNames, isAvailable } from "../../utils";
 import { CloseIcon } from "../internal/CloseIcon";
 import { ProviderContext, ToastContext } from "../internal/context";
 import { getDefaults } from "../internal/defaults";
@@ -110,7 +110,7 @@ export function ToastProvider({
     );
 
     // Toggle <html> class
-    if (rootClass && typeof document !== "undefined") {
+    if (rootClass && isAvailable(document)) {
         if (count) {
             document.documentElement.classList.add(rootClass);
         } else {

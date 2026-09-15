@@ -1,3 +1,5 @@
+import { isAvailable } from "./dom";
+
 /**
  * Extracts a single File object from various input types.
  *
@@ -27,7 +29,7 @@ export function getFormFile(v: unknown): File | undefined {
         return v.item(0) ?? undefined;
     }
 
-    if (typeof FormData !== "undefined" && v instanceof FormData) {
+    if (isAvailable(FormData) && v instanceof FormData) {
         for (const item of v.values()) {
             if (item instanceof File) {
                 return item;
@@ -75,7 +77,7 @@ export function getFormFiles(v: unknown): File[] {
         return files;
     }
 
-    if (typeof FormData !== "undefined" && v instanceof FormData) {
+    if (isAvailable(FormData) && v instanceof FormData) {
         const files: File[] = [];
 
         for (const item of v.values()) {
@@ -91,5 +93,5 @@ export function getFormFiles(v: unknown): File[] {
 }
 
 function isFileList(value: unknown): value is FileList {
-    return typeof FileList !== "undefined" && value instanceof FileList;
+    return isAvailable(FileList) && value instanceof FileList;
 }

@@ -1,10 +1,34 @@
 import { IS_CLIENT } from "./constants";
 import type {
+    Bounds,
+    Clipping,
     ElementRect,
     ElementSize,
     ScrollState,
     ViewportMetrics,
 } from "./type";
+
+/**
+ * Checks if a value is available (i.e., not `undefined`).
+ *
+ * @param value The value to check for availability (i.e., not `undefined`).
+ * @returns `true` if the value is not `undefined`, otherwise `false`.
+ */
+export function isAvailable<T>(
+    value: T
+): value is Exclude<T, undefined | null> {
+    return typeof value !== "undefined" && !!value;
+}
+
+/**
+ * Checks if a value is not available (i.e., `undefined`).
+ *
+ * @param value The value to check for non-availability (i.e., `undefined`).
+ * @returns `true` if the value is `undefined`, otherwise `false`.
+ */
+export function isNotAvailable<T>(value: T): value is Extract<T, undefined> {
+    return typeof value === "undefined";
+}
 
 /**
  * Retrieves the `content` attribute of a `<meta>` tag with the given name.
@@ -25,7 +49,7 @@ import type {
  *   `fallback` value when not present.
  */
 export function getMetaContent(name: string, fallback: string = ""): string {
-    if (typeof document === "undefined") return "";
+    if (isNotAvailable(document)) return "";
 
     return (
         document
@@ -55,7 +79,7 @@ export function getMetaContent(name: string, fallback: string = ""): string {
  */
 export async function copyToClipboard(data: string): Promise<void> {
     return new Promise((resolve, reject) => {
-        if (typeof navigator === "undefined") return;
+        if (isNotAvailable(navigator)) return;
 
         navigator.clipboard
             .writeText(data)
@@ -77,6 +101,88 @@ export async function copyToClipboard(data: string): Promise<void> {
  */
 export function classNames<T = unknown>(...classes: T[]): string {
     return classes.filter(Boolean).join(" ");
+}
+
+/**
+ * Converts a value in rem units to pixels.
+ *
+ * @param amount The number of rem units to convert to pixels. If not provided,
+ *   defaults to 1.
+ * @returns The equivalent pixel value of the specified rem units.
+ */
+export function getRem(amount?: number): number {
+    const root = document.documentElement;
+    const rem = parseFloat(getComputedStyle(root).fontSize);
+    return rem * (amount ?? 1);
+}
+
+/**
+ * Computes the current visual viewport + universal touch accessibility metrics.
+ *
+ * @returns The viewport width, height, and scale.
+ */
+export function getViewportMetrics(): ViewportMetrics {
+    let width = 0;
+    let height = 0;
+    let scale = 1;
+
+    if (IS_CLIENT && window.visualViewport) {
+        width = window.visualViewport.width;
+        height = window.visualViewport.height;
+        scale = window.visualViewport.scale;
+    } else if (IS_CLIENT) {
+        width = window.innerWidth;
+        height = window.innerHeight;
+    }
+
+    // Aspect ratio (taller screens reduce one-hand reach)
+    const aspect = height / width;
+
+    // Dynamic accessibility factor
+    let factor = 0.45; // default
+
+    if (aspect < 1.7) {
+        factor = 0.5; // short screens → easier reach
+    } else if (aspect > 2.0) {
+        factor = 0.4; // tall screens → harder reach
+    }
+
+    const maxAccessibleHeight = height * (factor + 0.15);
+    const preferredAccessibleHeight = height * factor;
+
+    return {
+        width,
+        height,
+        scale,
+        maxAccessibleHeight,
+        preferredAccessibleHeight,
+    };
+}
+
+/**
+ * Returns the bounding rectangle of the current viewport, taking into account
+ * the visual viewport if available.
+ */
+export function getViewportBounds(): Bounds {
+    if (isNotAvailable(window))
+        return { top: 0, left: 0, right: Infinity, bottom: Infinity };
+
+    if (isAvailable(window.visualViewport))
+        return {
+            top: window.visualViewport.offsetTop,
+            left: window.visualViewport.offsetLeft,
+            right:
+                window.visualViewport.offsetLeft + window.visualViewport.width,
+            bottom:
+                window.visualViewport.offsetTop + window.visualViewport.height,
+        };
+
+    return {
+        top: 0,
+        left: 0,
+        right: window.innerWidth,
+        bottom: window.innerHeight,
+    };
 }
 
 /**
@@ -165,91 +271,106 @@ export function getElementBounding(element: HTMLElement): ElementRect {
 }
 
 /**
- * Computes the intrinsic size of a given HTMLElement, accounting for overflow
- * within an optional scrollable element.
+ * Calculates the real size of an element, optionally including its border.
  *
- * @param root - The root HTMLElement whose intrinsic size is evaluated.
- * @param scroller - An optional scrollable HTMLElement whose overflow should be
- *   included. Defaults to the root element.
- * @returns An object containing the intrinsic width and height of the element.
+ * @param element - The element whose real size is being calculated.
+ * @param includeBorder - Whether to include the element's border in the size
+ *   calculation. Defaults to `true`.
+ * @returns The real size of the element, including optional border dimensions.
  */
-export function getElementIntrinsicSize(
-    root: HTMLElement,
-    scroller: HTMLElement = root
+export function getRealElementSize(
+    element: Element,
+    includeBorder = false
 ): ElementSize {
-    if (root === scroller) {
-        return {
-            width: scroller.scrollWidth,
-            height: scroller.scrollHeight,
-        };
+    let width = element.scrollWidth;
+    let height = element.scrollHeight;
+
+    if (includeBorder) {
+        const style = getComputedStyle(element);
+        width +=
+            parseFloat(style.borderLeftWidth || "0") +
+            parseFloat(style.borderRightWidth || "0");
+        height +=
+            parseFloat(style.borderTopWidth || "0") +
+            parseFloat(style.borderBottomWidth || "0");
     }
 
-    const rect = root.getBoundingClientRect();
-
-    const extraWidth = Math.max(0, scroller.scrollWidth - scroller.clientWidth);
-    const extraHeight = Math.max(
-        0,
-        scroller.scrollHeight - scroller.clientHeight
-    );
-
-    return {
-        width: Math.floor(rect.width) + extraWidth,
-        height: Math.floor(rect.height) + extraHeight,
-    };
+    return { width, height };
 }
 
 /**
- * Computes the current visual viewport + universal touch accessibility metrics.
+ * Determines which sides of an element are clipped by its ancestors or the
+ * viewport.
  *
- * @returns The viewport width, height, and scale.
+ * @param element - The HTMLElement to evaluate for clipping.
+ * @returns A `Clipping` object indicating which sides of the element are
+ *   clipped.
  */
-export function getViewportMetrics(): ViewportMetrics {
-    let width = 0;
-    let height = 0;
-    let scale = 1;
+export function getElementClipping(element: HTMLElement): Clipping {
+    const CLIPS_OVERFLOW_RE = /(auto|scroll|hidden|clip)/;
+    const CB_FILTER_RE = /(transform|perspective|filter|contain)/;
+    const establishesFixedContainingBlock = (
+        style: CSSStyleDeclaration
+    ): boolean => {
+        if (style.transform !== "none") return true;
+        if (style.perspective !== "none") return true;
+        if (style.filter !== "none") return true;
+        if (style.backdropFilter && style.backdropFilter !== "none")
+            return true;
+        if (/(layout|paint|strict|content)/.test(style.contain)) return true;
+        if (style.contentVisibility === "auto") return true;
+        if (CB_FILTER_RE.test(style.willChange)) return true;
+        return false;
+    };
 
-    if (IS_CLIENT && window.visualViewport) {
-        width = window.visualViewport.width;
-        height = window.visualViewport.height;
-        scale = window.visualViewport.scale;
-    } else if (IS_CLIENT) {
-        width = window.innerWidth;
-        height = window.innerHeight;
+    const viewport = getViewportBounds();
+    const rect = element.getBoundingClientRect();
+    const isFixed = getComputedStyle(element).position === "fixed";
+
+    let visibleTop = viewport.top;
+    let visibleLeft = viewport.left;
+    let visibleRight = viewport.right;
+    let visibleBottom = viewport.bottom;
+    let foundContainingBlock = !isFixed;
+
+    let parent = element.parentElement;
+    while (parent) {
+        const style = getComputedStyle(parent);
+
+        if (CLIPS_OVERFLOW_RE.test(`${style.overflowX}${style.overflowY}`)) {
+            const parentRect = parent.getBoundingClientRect();
+
+            visibleTop = Math.max(visibleTop, parentRect.top);
+            visibleLeft = Math.max(visibleLeft, parentRect.left);
+            visibleRight = Math.min(visibleRight, parentRect.right);
+            visibleBottom = Math.min(visibleBottom, parentRect.bottom);
+        }
+
+        if (
+            foundContainingBlock &&
+            (visibleRight <= visibleLeft || visibleBottom <= visibleTop)
+        ) {
+            break;
+        }
+
+        if (!foundContainingBlock && establishesFixedContainingBlock(style)) {
+            foundContainingBlock = true;
+        }
+
+        parent = parent.parentElement;
     }
 
-    // Aspect ratio (taller screens reduce one-hand reach)
-    const aspect = height / width;
-
-    // Dynamic accessibility factor
-    let factor = 0.45; // default
-
-    if (aspect < 1.7) {
-        factor = 0.5; // short screens → easier reach
-    } else if (aspect > 2.0) {
-        factor = 0.4; // tall screens → harder reach
+    if (isFixed && !foundContainingBlock) {
+        visibleTop = viewport.top;
+        visibleLeft = viewport.left;
+        visibleRight = viewport.right;
+        visibleBottom = viewport.bottom;
     }
-
-    const maxAccessibleHeight = height * (factor + 0.15);
-    const preferredAccessibleHeight = height * factor;
 
     return {
-        width,
-        height,
-        scale,
-        maxAccessibleHeight,
-        preferredAccessibleHeight,
+        isClippedTop: rect.top < visibleTop,
+        isClippedBottom: rect.bottom > visibleBottom,
+        isClippedLeft: rect.left < visibleLeft,
+        isClippedRight: rect.right > visibleRight,
     };
-}
-
-/**
- * Converts a value in rem units to pixels.
- *
- * @param amount The number of rem units to convert to pixels. If not provided,
- *   defaults to 1.
- * @returns The equivalent pixel value of the specified rem units.
- */
-export function getRem(amount?: number): number {
-    const root = document.documentElement;
-    const rem = parseFloat(getComputedStyle(root).fontSize);
-    return rem * (amount ?? 1);
 }

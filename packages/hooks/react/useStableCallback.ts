@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useCallback, useRef } from "react";
+import type { Maybe } from "yup";
 
 /**
  * Returns a callback with a stable identity that always calls the latest `fn`.
@@ -13,7 +14,7 @@ import { useCallback, useRef } from "react";
  *   invokes the latest version of `fn` with the provided arguments.
  */
 export function useStableCallback<T extends (...args: any[]) => any>(
-    fn: T | null | undefined
+    fn: Maybe<T>
 ): T {
     const fnRef = useRef(fn);
     fnRef.current = fn;

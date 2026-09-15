@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
+import { isAvailable } from "../../utils";
 
 /**
  * Creates a namespaced storage helper for a Storage implementation.
@@ -24,7 +25,7 @@ export function useStorage(storage: Storage, prefix?: string) {
 
     const isValid = useMemo(() => {
         return (
-            typeof storage !== "undefined" &&
+            isAvailable(storage) &&
             typeof storage.getItem === "function" &&
             typeof storage.setItem === "function" &&
             typeof storage.removeItem === "function"

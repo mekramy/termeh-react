@@ -1,28 +1,41 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import {
     getElementBounding,
     retainOrReplace,
     type ElementRect,
 } from "../../utils";
-import { useIsomorphicLayoutEffect } from "../react";
+import { useStableCallback } from "../react";
+import {
+    useLayoutWatch,
+    type LayoutWatchCallback,
+    type LayoutWatchSource,
+} from "./useLayoutWatch";
 
 export interface UseElementBoundingOptions {
-    /** Whether to round the bounding box values to the nearest integer. */
-    round?: boolean;
+    /**
+     * The debounce delay in milliseconds for updating the element's bounding
+     * box.
+     *
+     * @default 100
+     */
+    debounce: number;
 
     /**
      * Reset the tracked bounds to zero when the element is removed or unset.
      * Default: `true`.
      */
-    reset?: boolean;
+    reset: boolean;
 
     /** Recalculate bounds on window resize. Default: `true`. */
-    windowResize?: boolean;
+    windowResize: boolean;
 
     /** Recalculate bounds on window scroll. Default: `true`. */
-    windowScroll?: boolean;
+    windowScroll: boolean;
+
+    /** The media queries that should be watched for viewport changes. */
+    mediaQueries: string[];
 }
 
 /**
@@ -36,81 +49,39 @@ export interface UseElementBoundingOptions {
 export function useElementBounding<T extends HTMLElement>(
     element: T | null,
     {
-        round = false,
+        debounce = 100,
         reset = true,
         windowResize = true,
         windowScroll = true,
-    }: UseElementBoundingOptions = {}
+        mediaQueries,
+    }: Partial<UseElementBoundingOptions> = {}
 ): ElementRect & { update: () => void } {
-    const rafRef = useRef<number | null>(null);
+    const [empty] = useState(getEmptyBounding);
     const [rect, setRect] = useState(getEmptyBounding);
 
+    const onChange = useStableCallback<LayoutWatchCallback>((source) => {
+        const el = source === "unmount" ? null : element;
+
+        if (!el && reset) setRect((prev) => retainOrReplace(prev, empty));
+        else if (el)
+            setRect((prev) => retainOrReplace(prev, getElementBounding(el)));
+    });
+
     const update = useCallback(() => {
-        if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+        onChange("mount");
+    }, [onChange]);
 
-        if (!element) {
-            if (reset)
-                setRect((prev) => retainOrReplace(prev, getEmptyBounding()));
-            return;
-        }
-
-        rafRef.current = requestAnimationFrame(() => {
-            const rect = getElementBounding(element);
-
-            setRect((prev) =>
-                retainOrReplace(
-                    prev,
-                    Object.fromEntries(
-                        Object.entries(rect).map(([key, value]) => [
-                            key,
-                            typeof value === "number" && round
-                                ? Math.round(value)
-                                : value,
-                        ])
-                    ) as ElementRect
-                )
-            );
-        });
-    }, [element, round, reset]);
-
-    useIsomorphicLayoutEffect(() => {
-        update();
-    }, [update]);
-
-    useIsomorphicLayoutEffect(() => {
-        if (!element) return;
-
-        const resizeObserver = new ResizeObserver(update);
-        resizeObserver.observe(element);
-
-        const mutationObserver = new MutationObserver(update);
-        mutationObserver.observe(element, {
-            attributes: true,
-        });
-
-        return () => {
-            resizeObserver.disconnect();
-            mutationObserver.disconnect();
-        };
-    }, [element, update]);
-
-    useIsomorphicLayoutEffect(() => {
-        if (windowResize)
-            window.addEventListener("resize", update, { passive: true });
-
-        if (windowScroll)
-            window.addEventListener("scroll", update, {
-                capture: true,
-                passive: true,
-            });
-
-        return () => {
-            if (windowResize) window.removeEventListener("resize", update);
-
-            if (windowScroll)
-                window.removeEventListener("scroll", update, true);
-        };
-    }, [windowResize, windowScroll, update]);
+    const watch: LayoutWatchSource[] = [
+        "resize",
+        "mutation",
+        windowScroll && "scroll",
+        windowResize && "windowResize",
+    ].filter(Boolean) as LayoutWatchSource[];
+    useLayoutWatch(element, onChange, {
+        watch,
+        debounce,
+        mediaQueries,
+    });
 
     return {
         ...rect,

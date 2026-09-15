@@ -1,25 +1,39 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import { getScrollState, retainOrReplace, type ScrollState } from "../../utils";
-import { useIsomorphicLayoutEffect } from "../react";
-import { useMemoize } from "../react/useMemoize";
+import { useDebouncedCallback, useStableCallback, useWatch } from "../react";
+import {
+    useLayoutWatch,
+    type LayoutWatchCallback,
+    type LayoutWatchSource,
+} from "./useLayoutWatch";
 
 /** Supported scroll event observers. */
 type ScrollObserver = "scroll" | "resize" | "mutation";
 
 interface ScrollStateOptions {
     /**
+     * The debounce delay in milliseconds for updating the scroll state.
+     *
+     * @default 100
+     */
+    debounce: number;
+
+    /**
      * Pixel threshold used for edge detection.
      *
      * @default 0
      */
-    threshold?: number;
+    threshold: number;
 
     /**
      * Scroll observers to attach.
      *
      * @default ["scroll", "resize", "mutation"]
      */
-    observers?: ScrollObserver[];
+    observers: ScrollObserver[];
+
+    /** The media queries that should be watched for viewport changes. */
+    mediaQueries: string[];
 }
 
 /**
@@ -42,63 +56,55 @@ interface ScrollStateOptions {
 export function useScrollState<T extends HTMLElement>(
     element: T | null,
     {
+        debounce = 100,
         threshold = 0,
         observers = ["scroll", "resize", "mutation"],
-    }: ScrollStateOptions = {}
+        mediaQueries,
+    }: Partial<ScrollStateOptions> = {}
 ): ScrollState & { update: () => void } {
-    const rafRef = useRef<number | null>(null);
-    const observersMem = useMemoize(observers);
+    const [empty] = useState(getEmptyState);
     const [state, setState] = useState(getEmptyState);
 
-    const update = useCallback(() => {
-        if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    const onChange = useStableCallback<LayoutWatchCallback>((source) => {
+        const el = source === "unmount" ? null : element;
 
-        if (!element) {
-            setState((prev) => retainOrReplace(prev, getEmptyState()));
-            return;
-        }
-
-        rafRef.current = requestAnimationFrame(() => {
+        if (!el) setState((prev) => retainOrReplace(prev, empty));
+        else
             setState((prev) =>
-                retainOrReplace(prev, getScrollState(element, threshold))
+                retainOrReplace(prev, getScrollState(el, threshold))
             );
-        });
-    }, [element, threshold]);
+    });
 
-    useIsomorphicLayoutEffect(() => {
-        if (!element) return update();
+    const update = useCallback(() => {
+        onChange("mount");
+    }, [onChange]);
 
-        if (observersMem.includes("scroll"))
-            element.addEventListener("scroll", update, { passive: true });
+    const watch: LayoutWatchSource[] = [
+        observers.includes("resize") && "resize",
+        observers.includes("mutation") && "mutation",
+    ].filter(Boolean) as LayoutWatchSource[];
+    useLayoutWatch(element, onChange, {
+        watch,
+        debounce,
+        mediaQueries,
+    });
 
-        let resizeObserver: ResizeObserver | null = null;
-        if (observersMem.includes("resize")) {
-            resizeObserver = new ResizeObserver(update);
-            resizeObserver.observe(element);
+    const handleScroll = useDebouncedCallback(update, debounce);
+    useWatch(
+        [element, observers.includes("scroll")] as const,
+        ([el, isObserved]) => {
+            if (!el) return;
+
+            if (isObserved)
+                el.addEventListener("scroll", handleScroll, {
+                    passive: true,
+                });
+
+            return () => {
+                if (isObserved) el.removeEventListener("scroll", handleScroll);
+            };
         }
-
-        let mutationObserver: MutationObserver | null = null;
-        if (observersMem.includes("mutation")) {
-            mutationObserver = new MutationObserver(update);
-            mutationObserver.observe(element, {
-                childList: true,
-                subtree: true,
-                attributes: true,
-            });
-        }
-
-        return () => {
-            if (observersMem.includes("scroll"))
-                element.removeEventListener("scroll", update);
-
-            resizeObserver?.disconnect();
-            mutationObserver?.disconnect();
-
-            if (rafRef.current !== null) {
-                cancelAnimationFrame(rafRef.current);
-            }
-        };
-    }, [element, observersMem, update]);
+    );
 
     return {
         ...state,

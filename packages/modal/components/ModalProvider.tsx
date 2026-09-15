@@ -9,7 +9,7 @@ import {
     type PropsWithChildren,
 } from "react";
 import { useScrollState } from "../../hooks";
-import { classNames, newId } from "../../utils";
+import { classNames, isAvailable, newId } from "../../utils";
 import { ModalContext, ProviderContext } from "../internal/context";
 import { getDefaults } from "../internal/defaults";
 import { createModalStore } from "../internal/store";
@@ -105,7 +105,7 @@ export function ModalProvider({
 
     // Toggle <html> class
     const rootClass = options?.rootClass ?? defaults.rootClass ?? "";
-    if (rootClass) {
+    if (rootClass && isAvailable(document)) {
         if (count) document.documentElement.classList.add(rootClass);
         else document.documentElement.classList.remove(rootClass);
     }

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { object, ValidationError } from "yup";
+import { isAvailable } from "../../utils";
 import { createErrorStore } from "../stores/errors";
 import { createFieldStore } from "../stores/fields";
 import type { FormContext, LocalizedMessages } from "../types";
@@ -133,7 +134,7 @@ export function useForm(
 
     // Scroll to first error after validation
     useEffect(() => {
-        if (scrollPending && typeof document !== "undefined") {
+        if (scrollPending && isAvailable(document)) {
             requestAnimationFrame(() => {
                 for (const [name, field] of fields.getFields()) {
                     const el =

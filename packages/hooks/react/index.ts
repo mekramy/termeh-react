@@ -2,6 +2,7 @@ export * from "./useComputed";
 export * from "./useComputedLatest";
 export * from "./useDebounce";
 export * from "./useDebounceCallback";
+export * from "./useDebouncedCallback";
 export * from "./useIsMounted";
 export * from "./useIsomorphicLayoutEffect";
 export * from "./useLatest";
