@@ -1,0 +1,85 @@
+@use "sass:color";
+@use "termeh";
+
+@mixin use-popup($colors: null) {
+    @if not termeh.module-presented("popup") {
+        @include termeh.require("popup", "action");
+        @include termeh.present-module("popup");
+
+        $colors: termeh.list-safe($colors, "use-popup", "colors", ());
+
+        $primary: termeh.color("primary");
+        $gap-macro: termeh.var("gap", "macro", 1.6em);
+        $decorator: termeh.var("decorator", "size", 2px);
+        $line-height: termeh.var("line-height", "normal", 1.6em);
+
+        $fallback-radius: termeh.var("radius", "normal");
+        $fallback-background: termeh.var("base", "color", white);
+        $fallback-foreground: termeh.var("base", "foreground", black);
+        $fallback-separator: termeh.var("base", "separator", #e0e4eb);
+
+        $background: termeh.var("popup", "background", $fallback-background);
+        $foreground: termeh.var("popup", "foreground", $fallback-foreground);
+        $separator: termeh.var("popup", "separator", $fallback-separator);
+        $border: termeh.var("popup", "border", $fallback-separator);
+        $arrow: termeh.var("popup", "arrow", $fallback-separator);
+        $shadow: termeh.var(
+            "popup",
+            "shadow",
+            termeh.soft-shadow(0, 5px, $fallback-separator)
+        );
+
+        $radius: termeh.var("popup", "radius", $fallback-radius);
+        $padding: termeh.var("popup", "padding", $gap-macro);
+
+        @at-root {
+            .popup {
+                display: flex;
+                flex-direction: column;
+                align-items: stretch;
+                position: relative;
+                border-radius: $radius;
+                color: $foreground;
+                background: $background;
+                box-shadow: $shadow;
+                border: 1px solid $border;
+
+                > section {
+                    flex: 1 1 auto;
+                    padding: $padding;
+                    box-sizing: border-box;
+                }
+
+                > .arrow {
+                    fill: $arrow;
+                }
+
+                > .actions {
+                    flex: none;
+                    padding: termeh.half($padding) $padding;
+                    border-top: 1px solid $separator;
+                }
+
+                &.is-loading {
+                    @include termeh.loader($line-height, $primary, $decorator);
+
+                    > * {
+                        opacity: 0;
+                    }
+
+                    > .arrow {
+                        opacity: 1;
+                    }
+                }
+
+                @each $name, $color in termeh.colors($colors) {
+                    &.is-#{$name} {
+                        &.is-loading {
+                            @include termeh.loader-color($color);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

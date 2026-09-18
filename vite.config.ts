@@ -32,6 +32,7 @@ export default defineConfig({
                 ),
                 ui: resolve(import.meta.dirname, "packages/ui/index.ts"),
                 toast: resolve(import.meta.dirname, "packages/toast/index.ts"),
+                modal: resolve(import.meta.dirname, "packages/modal/index.ts"),
             },
             fileName: (format, entry) => {
                 if (entry === "index") {
