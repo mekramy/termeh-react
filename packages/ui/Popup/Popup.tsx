@@ -85,7 +85,7 @@ export function Popup<T = unknown>({
     onAction,
 
     source,
-    content,
+    children,
     actions,
 }: Options<T>) {
     const arrowRef = useRef<SVGSVGElement>(null);
@@ -304,7 +304,8 @@ export function Popup<T = unknown>({
 
     // Render UIs
     const sourceUI = source(sourceProps);
-    const contentUI = content(contentProps);
+    const bodyUI =
+        typeof children === "function" ? children(contentProps) : children;
     const actionsUI = actions?.(contentProps);
 
     return (
@@ -341,7 +342,7 @@ export function Popup<T = unknown>({
                                 className="arrow"
                             />
                         )}
-                        <section>{contentUI}</section>
+                        <section>{bodyUI}</section>
                         {actionsUI && (
                             <div
                                 className="actions"

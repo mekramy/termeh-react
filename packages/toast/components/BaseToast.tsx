@@ -4,17 +4,17 @@ import {
     type HTMLAttributes,
     type ReactNode,
 } from "react";
-import { classNames } from "../../utils";
+import { classNames, type RenderableProps } from "../../utils";
 import { useCreate } from "../hooks/useCreate";
 
 type SlotProps = Omit<ReturnType<typeof useCreate>, "ref" | "stateClasses">;
 type BaseProps = HTMLAttributes<HTMLDivElement> & {
     icon?: ReactNode;
-    body: (props: SlotProps) => ReactNode;
+    children: RenderableProps<(props: SlotProps) => ReactNode>;
     actions?: (props: SlotProps) => ReactNode;
 };
 
-export function BaseToast({ icon, body, actions, className }: BaseProps) {
+export function BaseToast({ icon, children, actions, className }: BaseProps) {
     const {
         ref,
         id,
@@ -73,6 +73,9 @@ export function BaseToast({ icon, body, actions, className }: BaseProps) {
         ]
     );
 
+    const bodyUI = typeof children === "function" ? children(props) : children;
+    const actionsUI = actions?.(props);
+
     return (
         <div
             id={id}
@@ -82,9 +85,9 @@ export function BaseToast({ icon, body, actions, className }: BaseProps) {
         >
             <div className="toast-wrapper">
                 {icon && <div className="toast-icon">{icon}</div>}
-                <div className="toast-content">{body(props)}</div>
+                <div className="toast-content">{bodyUI}</div>
             </div>
-            {actions && <div className="actions">{actions(props)}</div>}
+            {actionsUI && <div className="actions">{actionsUI}</div>}
             <div className="toast-progress" style={{ width: `${progress}%` }} />
         </div>
     );

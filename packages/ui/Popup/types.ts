@@ -12,7 +12,8 @@ import type {
     UseRoleProps,
 } from "@floating-ui/react";
 import type { Variant } from "motion";
-import type { Ref, RefObject } from "react";
+import type { ReactNode, Ref, RefObject } from "react";
+import type { RenderableProps } from "../../utils";
 
 /** The side on which the popup is positioned relative to its reference. */
 export type Side = "top" | "left" | "bottom" | "right";
@@ -183,13 +184,13 @@ export interface Options<T> {
     onAction?: ActionHandler<T>;
 
     /** Renders the reference element that controls the popup. */
-    source: (props: RenderSourceProps) => React.ReactNode;
+    source: (props: RenderSourceProps) => ReactNode;
 
     /** Renders the main popup content. */
-    content: (props: RenderContentProps<T>) => React.ReactNode;
+    children: RenderableProps<(props: RenderContentProps<T>) => ReactNode>;
 
     /** Optionally renders the popup actions area. */
-    actions?: (props: RenderContentProps<T>) => React.ReactNode;
+    actions?: (props: RenderContentProps<T>) => ReactNode;
 }
 
 /** Props provided to the source render function. */

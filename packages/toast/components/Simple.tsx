@@ -25,7 +25,6 @@ export function Simple({
         <BaseToast
             className={classNames("is-simple", className)}
             icon={icon}
-            body={() => children}
             actions={
                 hasActions
                     ? ({ action }) => (
@@ -56,6 +55,8 @@ export function Simple({
                       )
                     : undefined
             }
-        />
+        >
+            {children}
+        </BaseToast>
     );
 }

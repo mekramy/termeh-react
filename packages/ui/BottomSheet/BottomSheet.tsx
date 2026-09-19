@@ -13,7 +13,7 @@ import {
     useVisualViewport,
     type UseBottomSheetOptions,
 } from "../../hooks";
-import { classNames } from "../../utils";
+import { classNames, type RenderableProps } from "../../utils";
 
 type SlotProps = Pick<
     ReturnType<typeof useBottomSheet>,
@@ -47,22 +47,22 @@ type BaseProps = HTMLAttributes<HTMLDivElement> &
         scrollFade?: boolean;
 
         /**
-         * The render function for the body slot of the bottom sheet. It
-         * receives the current state and control functions as props.
-         *
-         * @param props The slot props containing state and control functions.
-         * @returns The React node to render inside the body slot.
-         */
-        body: (props: SlotProps) => ReactNode;
-
-        /**
          * The render function for the header slot of the bottom sheet. It
          * receives the current state and control functions as props.
          *
          * @param props The slot props containing state and control functions.
          * @returns The React node to render inside the header slot.
          */
-        header?: (props: SlotProps) => ReactNode;
+        header?: RenderableProps<(props: SlotProps) => ReactNode>;
+
+        /**
+         * The render function for the body slot of the bottom sheet. It
+         * receives the current state and control functions as props.
+         *
+         * @param props The slot props containing state and control functions.
+         * @returns The React node to render inside the body slot.
+         */
+        children: RenderableProps<(props: SlotProps) => ReactNode>;
 
         /**
          * The render function for the actions slot of the bottom sheet. It
@@ -96,7 +96,7 @@ export function BottomSheet({
     fit = false,
     scrollFade = true,
     header,
-    body,
+    children,
     actions,
     className,
     ...divProps
@@ -162,6 +162,10 @@ export function BottomSheet({
         [close, restore, expand]
     );
 
+    const headerUI = typeof header === "function" ? header(props) : header;
+    const bodyUI = typeof children === "function" ? children(props) : children;
+    const actionsUI = actions?.(props);
+
     return (
         <motion.div
             className="bottom-sheet-wrapper"
@@ -183,8 +187,8 @@ export function BottomSheet({
                     <div />
                 </div>
 
-                {header && (
-                    <div className="bottom-sheet-header">{header(props)}</div>
+                {headerUI && (
+                    <div className="bottom-sheet-header">{headerUI}</div>
                 )}
 
                 <div className="bottom-sheet-scroller">
@@ -193,7 +197,7 @@ export function BottomSheet({
                         style={{ touchAction }}
                         className="bottom-sheet-content"
                     >
-                        {body(props)}
+                        {bodyUI}
                     </motion.div>
 
                     {scrollFade && (
@@ -226,7 +230,7 @@ export function BottomSheet({
                             return false;
                         }}
                     >
-                        {actions(props)}
+                        {actionsUI}
                     </div>
                 )}
             </div>

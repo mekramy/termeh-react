@@ -1,6 +1,6 @@
 import { motion, type HTMLMotionProps } from "motion/react";
 import { useMemo, useRef, type ReactNode } from "react";
-import { classNames } from "../../utils";
+import { classNames, type RenderableProps } from "../../utils";
 import { useCreate } from "../hooks/useCreate";
 
 type SlotProps = Omit<
@@ -15,14 +15,14 @@ type SlotProps = Omit<
     | "motionListeners"
 >;
 type BaseProps = HTMLMotionProps<"div"> & {
-    body: (props: SlotProps) => ReactNode;
-    header?: (props: SlotProps) => ReactNode;
+    header?: RenderableProps<(props: SlotProps) => ReactNode>;
+    children: RenderableProps<(props: SlotProps) => ReactNode>;
     actions?: (props: SlotProps) => ReactNode;
 };
 
 export function BaseModal({
     header,
-    body,
+    children,
     actions,
     className,
     ...rootProps
@@ -85,8 +85,8 @@ export function BaseModal({
         ]
     );
 
-    const bodyUI = body(props);
-    const headerUI = header?.(props);
+    const headerUI = typeof header === "function" ? header(props) : header;
+    const bodyUI = typeof children === "function" ? children(props) : children;
     const actionUI = actions?.(props);
 
     /** Render the bottom sheet if the modal is a sheet. */

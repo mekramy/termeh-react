@@ -42,7 +42,6 @@ export function Simple({
                       )
                     : undefined
             }
-            body={() => children}
             actions={
                 hasActions
                     ? ({ action }) => (
@@ -73,6 +72,8 @@ export function Simple({
                       )
                     : undefined
             }
-        />
+        >
+            {children}
+        </BaseModal>
     );
 }

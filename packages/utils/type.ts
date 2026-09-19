@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 /** Nullable value. */
 export type Nullable<T> = T | null;
 
@@ -14,6 +16,9 @@ export type PrimitiveType =
 /** Represents a function that performs cleanup or teardown, or `void`. */
 export type Destructor = void | (() => void);
 
+/** Represents a value that can either be a ReactNode or a specific type `T`. */
+export type RenderableProps<T> = ReactNode | T;
+
 /**
  * Represents a compound value composed from primitives:
  *
@@ -23,6 +28,82 @@ export type Destructor = void | (() => void);
  */
 export type CompoundType =
     PrimitiveType | PrimitiveType[] | Record<string, PrimitiveType>;
+
+/** Represents the scroll state of an element. */
+export interface ScrollState {
+    /** Horizontal scroll offset in pixels */
+    scrollLeft: number;
+    /** Vertical scroll offset in pixels */
+    scrollTop: number;
+
+    /** Whether horizontal scrolling is possible */
+    canScrollHorizontally: boolean;
+    /** Whether vertical scrolling is possible */
+    canScrollVertically: boolean;
+
+    /** Whether scrolling up is possible */
+    canScrollUp: boolean;
+    /** Whether scrolling down is possible */
+    canScrollDown: boolean;
+    /** Whether scrolling left is possible */
+    canScrollLeft: boolean;
+    /** Whether scrolling right is possible */
+    canScrollRight: boolean;
+
+    /** Whether the top edge has been reached (within threshold) */
+    isTopEdgeReached: boolean;
+    /** Whether the bottom edge has been reached (within threshold) */
+    isBottomEdgeReached: boolean;
+    /** Whether the left edge has been reached (within threshold) */
+    isLeftEdgeReached: boolean;
+    /** Whether the right edge has been reached (within threshold) */
+    isRightEdgeReached: boolean;
+}
+
+/** Represents the size of an element. */
+export interface ElementSize {
+    width: number;
+    height: number;
+}
+
+/** Represents the bounding rectangle of an element. */
+export interface ElementRect extends ElementSize {
+    x: number;
+    y: number;
+
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+
+    readonly centerX: number;
+    readonly centerY: number;
+}
+
+/** Metrics of the visual viewport. */
+export interface ViewportMetrics {
+    width: number;
+    height: number;
+    scale: number;
+    maxAccessibleHeight: number;
+    preferredAccessibleHeight: number;
+}
+
+/** Represents the bounding limits of an element or viewport. */
+export interface Bounds {
+    top: number;
+    left: number;
+    right: number;
+    bottom: number;
+}
+
+/** Represents the clipping state of an element. */
+export interface Clipping {
+    isClippedTop: boolean;
+    isClippedBottom: boolean;
+    isClippedLeft: boolean;
+    isClippedRight: boolean;
+}
 
 /**
  * Checks whether a value is `undefined`.
@@ -175,80 +256,4 @@ export function isPrimitiveRecord(
  */
 export function isCompoundType(v: unknown): v is CompoundType {
     return isPrimitive(v) || isPrimitiveArray(v) || isPrimitiveRecord(v);
-}
-
-/** Represents the scroll state of an element. */
-export interface ScrollState {
-    /** Horizontal scroll offset in pixels */
-    scrollLeft: number;
-    /** Vertical scroll offset in pixels */
-    scrollTop: number;
-
-    /** Whether horizontal scrolling is possible */
-    canScrollHorizontally: boolean;
-    /** Whether vertical scrolling is possible */
-    canScrollVertically: boolean;
-
-    /** Whether scrolling up is possible */
-    canScrollUp: boolean;
-    /** Whether scrolling down is possible */
-    canScrollDown: boolean;
-    /** Whether scrolling left is possible */
-    canScrollLeft: boolean;
-    /** Whether scrolling right is possible */
-    canScrollRight: boolean;
-
-    /** Whether the top edge has been reached (within threshold) */
-    isTopEdgeReached: boolean;
-    /** Whether the bottom edge has been reached (within threshold) */
-    isBottomEdgeReached: boolean;
-    /** Whether the left edge has been reached (within threshold) */
-    isLeftEdgeReached: boolean;
-    /** Whether the right edge has been reached (within threshold) */
-    isRightEdgeReached: boolean;
-}
-
-/** Represents the size of an element. */
-export interface ElementSize {
-    width: number;
-    height: number;
-}
-
-/** Represents the bounding rectangle of an element. */
-export interface ElementRect extends ElementSize {
-    x: number;
-    y: number;
-
-    top: number;
-    right: number;
-    bottom: number;
-    left: number;
-
-    readonly centerX: number;
-    readonly centerY: number;
-}
-
-/** Metrics of the visual viewport. */
-export interface ViewportMetrics {
-    width: number;
-    height: number;
-    scale: number;
-    maxAccessibleHeight: number;
-    preferredAccessibleHeight: number;
-}
-
-/** Represents the bounding limits of an element or viewport. */
-export interface Bounds {
-    top: number;
-    left: number;
-    right: number;
-    bottom: number;
-}
-
-/** Represents the clipping state of an element. */
-export interface Clipping {
-    isClippedTop: boolean;
-    isClippedBottom: boolean;
-    isClippedLeft: boolean;
-    isClippedRight: boolean;
 }
