@@ -1,12 +1,12 @@
-@use "sass:color";
 @use "termeh";
 
-@mixin use-popup($colors: null) {
+@mixin use-popup($colors: null, $sizes: null) {
     @if not termeh.module-presented("popup") {
         @include termeh.require("popup", "action");
         @include termeh.present-module("popup");
 
         $colors: termeh.list-safe($colors, "use-popup", "colors", ());
+        $sizes: termeh.map-safe($sizes, "use-popup", "sizes", ());
 
         $primary: termeh.color("primary");
         $gap-macro: termeh.var("gap", "macro", 1.6em);
@@ -43,6 +43,7 @@
                 background: $background;
                 box-shadow: $shadow;
                 border: 1px solid $border;
+                max-width: 100%;
 
                 > section {
                     flex: 1 1 auto;
@@ -77,6 +78,12 @@
                         &.is-loading {
                             @include termeh.loader-color($color);
                         }
+                    }
+                }
+
+                @each $name, $size in $sizes {
+                    &.is-#{$name} {
+                        max-width: min($size, 95vw);
                     }
                 }
             }

@@ -32,5 +32,5 @@ export const DEFAULT_ANIMATIONS: Animations = {
 };
 
 export const DEFAULT_HOVER_OPTIONS = {
-    delay: { open: 150, close: 250 },
+    delay: { open: 250, close: 500 },
 };

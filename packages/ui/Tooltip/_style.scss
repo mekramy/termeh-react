@@ -1,0 +1,122 @@
+@use "sass:color";
+@use "termeh";
+
+@mixin use-tooltip($colors: null, $sizes: null) {
+    @if not termeh.module-presented("tooltip") {
+        @include termeh.require("tooltip", "icon");
+        @include termeh.require("tooltip", "action");
+        @include termeh.present-module("tooltip");
+
+        $colors: termeh.list-safe($colors, "use-tooltip", "colors", ());
+        $sizes: termeh.map-safe($sizes, "use-tooltip", "sizes", ());
+
+        $gap-micro: termeh.var("gap", "micro", 8px);
+        $decorator: termeh.var("decorator", "size", 2px);
+        $line-height: termeh.var("line-height", "normal", 1.6em);
+
+        $fallback-radius: termeh.var("radius", "normal");
+
+        $background: termeh.var("tooltip", "background", rgba(0, 0, 0, 0.9));
+        $foreground: termeh.var("tooltip", "foreground", white);
+        $arrow: termeh.var("tooltip", "arrow", $background);
+
+        $radius: termeh.var("tooltip", "radius", $fallback-radius);
+        $padding: termeh.var("tooltip", "padding", $gap-micro $gap-micro * 2);
+
+        $primary: termeh.color("primary");
+        $primary-readable: color.mix($foreground, $primary, 50%);
+
+        @at-root {
+            .tooltip {
+                display: flex;
+                flex-direction: row;
+                align-items: flex-start;
+                gap: 1em;
+                position: relative;
+                max-width: 100%;
+                padding: $padding;
+                line-height: $line-height;
+                color: $foreground;
+                background: $background;
+                border-radius: $radius;
+                box-sizing: border-box;
+
+                > .tooltip-icon {
+                    flex: none;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    vertical-align: middle;
+                    width: 1em;
+                    height: $line-height;
+                    color: $primary-readable;
+
+                    .icon {
+                        width: 1em;
+                        height: 1em;
+                    }
+                }
+
+                > .tooltip-content {
+                    flex: 1;
+
+                    h1,
+                    h2,
+                    h3,
+                    h4,
+                    h5,
+                    h6 {
+                        flex: 1;
+                        font-size: 1em;
+                        font-weight: 500;
+                        line-height: $line-height;
+                    }
+
+                    > * {
+                        @include termeh.marged() {
+                            margin-bottom: $gap-micro;
+                        }
+                    }
+                }
+
+                > .arrow {
+                    fill: $arrow;
+                }
+
+                &.is-loading {
+                    @include termeh.loader(
+                        $line-height,
+                        $foreground,
+                        $decorator
+                    );
+
+                    > * {
+                        opacity: 0;
+                    }
+
+                    > .arrow {
+                        opacity: 1;
+                    }
+                }
+
+                @each $name, $color in termeh.colors($colors) {
+                    &.is-#{$name} {
+                        > .tooltip-icon {
+                            color: color.mix($foreground, $color, 50%);
+                        }
+
+                        &.is-loading {
+                            @include termeh.loader-color($color);
+                        }
+                    }
+                }
+
+                @each $name, $size in $sizes {
+                    &.is-#{$name} {
+                        max-width: min($size, 95vw);
+                    }
+                }
+            }
+        }
+    }
+}
