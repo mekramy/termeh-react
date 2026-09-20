@@ -42,6 +42,7 @@ import type {
     Options,
     RenderContentProps,
     RenderSourceProps,
+    Trigger,
 } from "./types";
 import {
     resolveAnimation,
@@ -60,6 +61,7 @@ export function Popup<T = unknown>({
     ref,
     initial = "close",
     trigger = "click",
+    closeTrigger,
     placement = "bottom",
     closable = true,
     portalId,
@@ -67,7 +69,6 @@ export function Popup<T = unknown>({
     className,
     animations = DEFAULT_ANIMATIONS,
 
-    role: _role = "tooltip",
     offset: _offset = true,
     flip: _flip = true,
     shift: _shift = true,
@@ -99,8 +100,20 @@ export function Popup<T = unknown>({
     const [isLoading, setIsLoading] = useState(false);
 
     // Normalize and memoize
-    const triggers = useMemoize(Array.isArray(trigger) ? trigger : [trigger]);
-    const isManual = triggers.includes("manual");
+    const isManual = trigger === "manual";
+    const triggers = useMemoize(
+        isManual ? [] : Array.isArray(trigger) ? trigger : [trigger]
+    );
+    const closeTriggers = useMemoize(
+        closeTrigger === undefined
+            ? null
+            : closeTrigger === "manual"
+              ? []
+              : Array.isArray(closeTrigger)
+                ? closeTrigger
+                : [closeTrigger]
+    );
+
     const middlewares = useComputed<Middleware[]>(() => {
         const mw: Middleware[] = [];
 
@@ -139,6 +152,11 @@ export function Popup<T = unknown>({
     }, [_offset, _shift, _arrow, _flip]);
 
     // Handler / Helpers
+    const canCloseWith = useStableCallback(
+        (target: Trigger) =>
+            !isOpen || !closeTriggers || closeTriggers.includes(target)
+    );
+
     const scheduleClose = useStableCallback((mode: CloseMode) => {
         if (!isOpen) return;
 
@@ -237,30 +255,46 @@ export function Popup<T = unknown>({
         whileElementsMounted: autoUpdate,
     });
 
+    const role = useRole(context, { role: "tooltip" });
     const hover = useHover(context, {
         ...hoverOptions,
         handleClose: safePolygon(),
-        enabled: !isManual && !isLoading && triggers.includes("hover"),
+        enabled:
+            !isManual &&
+            !isLoading &&
+            triggers.includes("hover") &&
+            canCloseWith("hover"),
     });
     const focus = useFocus(context, {
-        enabled: !isManual && !isLoading && triggers.includes("focus"),
+        enabled:
+            !isManual &&
+            !isLoading &&
+            triggers.includes("focus") &&
+            canCloseWith("focus"),
     });
     const click = useClick(context, {
         ...clickOptions,
         toggle: false,
-        enabled: !isManual && !isLoading && triggers.includes("click"),
+        enabled:
+            !isManual &&
+            !isLoading &&
+            triggers.includes("click") &&
+            canCloseWith("click"),
     });
     const dismiss = useDismiss(context, {
         ...dismissOptions,
         enabled: !isManual && !isLoading && closable,
+        outsidePress:
+            !closeTriggers || closeTriggers.includes("click")
+                ? (dismissOptions?.outsidePress ?? true)
+                : false,
     });
-    const role = useRole(context, { role: _role });
     const { getReferenceProps, getFloatingProps } = useInteractions([
+        role,
         hover,
         focus,
         click,
         dismiss,
-        role,
     ]);
 
     // Driven value

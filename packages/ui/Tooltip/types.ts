@@ -9,7 +9,6 @@ import type {
     UseClickProps,
     UseDismissProps,
     UseHoverProps,
-    UseRoleProps,
 } from "@floating-ui/react";
 import type { Variant } from "motion";
 import type { ReactNode, Ref, RefObject } from "react";
@@ -18,8 +17,14 @@ import type { RenderableProps } from "../../utils";
 /** The side on which the tooltip is positioned relative to its reference. */
 export type Side = "top" | "left" | "bottom" | "right";
 
-/** Interaction modes that can open the tooltip. */
-export type Trigger = "manual" | "hover" | "click" | "focus";
+/** Interaction modes that can open or close the popup. */
+export type Trigger = "hover" | "click" | "focus";
+
+/**
+ * Trigger configuration: either fully manual, or one or more interaction
+ * triggers.
+ */
+export type TriggerMode = "manual" | Trigger | Trigger[];
 
 /** The area that triggered a click callback. */
 export type ClickArea = "tooltip" | "outside";
@@ -74,11 +79,20 @@ export interface Options {
     initial?: "open" | "close";
 
     /**
-     * The interaction mode(s) that can open the tooltip.
+     * The interaction mode(s) that can open the popup. Use "manual" alone to
+     * disable all interaction triggers.
      *
      * @default "click"
      */
-    trigger?: Trigger | Trigger[];
+    trigger?: TriggerMode;
+
+    /**
+     * The interaction mode(s) that can close the popup. By default follow
+     * trigger. Use "manual" alone to disable all interaction triggers.
+     *
+     * @default undefined
+     */
+    closeTrigger?: TriggerMode;
 
     /**
      * The placement of the tooltip relative to its reference element.
@@ -105,13 +119,6 @@ export interface Options {
 
     /** Custom open and close motion variants. */
     animations?: Animations;
-
-    /**
-     * The ARIA role assigned to the tooltip.
-     *
-     * @default "tooltip"
-     */
-    role?: UseRoleProps["role"];
 
     /**
      * The distance between the tooltip and its reference element.
