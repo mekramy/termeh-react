@@ -6,6 +6,7 @@ import type {
     OffsetOptions,
     Placement,
     shift,
+    Strategy,
     UseClickProps,
     UseDismissProps,
     UseHoverProps,
@@ -95,13 +96,6 @@ export interface Options {
     closeTrigger?: TriggerMode;
 
     /**
-     * The placement of the tooltip relative to its reference element.
-     *
-     * @default "bottom"
-     */
-    placement?: Placement;
-
-    /**
      * Whether user interactions can close the tooltip.
      *
      * @default true
@@ -119,6 +113,21 @@ export interface Options {
 
     /** Custom open and close motion variants. */
     animations?: Animations;
+
+    /**
+     * The positioning strategy for the tooltip, determining how it is placed
+     * relative to its reference element.
+     *
+     * @default "absolute"
+     */
+    strategy?: Strategy;
+
+    /**
+     * The placement of the tooltip relative to its reference element.
+     *
+     * @default "bottom"
+     */
+    placement?: Placement;
 
     /**
      * The distance between the tooltip and its reference element.
@@ -148,10 +157,13 @@ export interface Options {
      */
     arrow?: boolean | Parameters<typeof arrow>[0];
 
+    /** Additional Floating UI middleware. */
+    middleware?: Middleware[];
+
     /**
      * Options for hover-based opening and closing.
      *
-     * @default { delay: { open: 100, close: 250 }, mouseOnly: false }
+     * @default { delay: { open: 250, close: 500 }, mouseOnly: false }
      */
     hoverOptions?: Pick<UseHoverProps, "delay" | "mouseOnly">;
 
@@ -168,9 +180,6 @@ export interface Options {
      * @default { escapeKey: true, outsidePress: true }
      */
     dismissOptions?: Pick<UseDismissProps, "escapeKey" | "outsidePress">;
-
-    /** Additional Floating UI middleware. */
-    middleware?: Middleware[];
 
     /** Called when the tooltip opens. */
     onOpen?: OpenHandler;

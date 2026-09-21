@@ -6,6 +6,7 @@ import type {
     OffsetOptions,
     Placement,
     shift,
+    Strategy,
     UseClickProps,
     UseDismissProps,
     UseHoverProps,
@@ -101,13 +102,6 @@ export interface Options<T> {
     closeTrigger?: TriggerMode;
 
     /**
-     * The placement of the popup relative to its reference element.
-     *
-     * @default "bottom"
-     */
-    placement?: Placement;
-
-    /**
      * Whether user interactions can close the popup.
      *
      * @default true
@@ -125,6 +119,21 @@ export interface Options<T> {
 
     /** Custom open and close motion variants. */
     animations?: Animations;
+
+    /**
+     * The positioning strategy for the popup, determining how it is placed
+     * relative to its reference element.
+     *
+     * @default "absolute"
+     */
+    strategy?: Strategy;
+
+    /**
+     * The placement of the popup relative to its reference element.
+     *
+     * @default "bottom"
+     */
+    placement?: Placement;
 
     /**
      * The distance between the popup and its reference element.
@@ -154,6 +163,9 @@ export interface Options<T> {
      */
     arrow?: boolean | Parameters<typeof arrow>[0];
 
+    /** Additional Floating UI middleware. */
+    middleware?: Middleware[];
+
     /**
      * Options for hover-based opening and closing.
      *
@@ -174,9 +186,6 @@ export interface Options<T> {
      * @default { escapeKey: true, outsidePress: true }
      */
     dismissOptions?: Pick<UseDismissProps, "escapeKey" | "outsidePress">;
-
-    /** Additional Floating UI middleware. */
-    middleware?: Middleware[];
 
     /** Called when the popup opens. */
     onOpen?: OpenHandler;

@@ -62,23 +62,23 @@ export function Popup<T = unknown>({
     initial = "close",
     trigger = "click",
     closeTrigger,
-    placement = "bottom",
     closable = true,
     portalId,
     portalNode,
     className,
     animations = DEFAULT_ANIMATIONS,
 
+    strategy,
+    placement = "bottom",
     offset: _offset = true,
     flip: _flip = true,
     shift: _shift = true,
     arrow: _arrow = true,
+    middleware = [],
 
     hoverOptions = DEFAULT_HOVER_OPTIONS,
     clickOptions,
     dismissOptions,
-
-    middleware = [],
 
     onOpen,
     onClose,
@@ -249,6 +249,7 @@ export function Popup<T = unknown>({
     // Hook to manage the floating element's positioning and behavior
     const { refs, floatingStyles, context } = useFloating({
         open: isOpen,
+        strategy,
         placement,
         middleware: middlewares,
         onOpenChange: handleOpenChange,
