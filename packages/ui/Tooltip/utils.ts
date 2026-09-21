@@ -1,5 +1,6 @@
 import type { OpenChangeReason, Placement, Side } from "@floating-ui/react";
 import type { Variant } from "motion";
+import type { Maybe } from "../../utils";
 import type { Animation, Animations, CloseMode, OpenMode } from "./types";
 
 /** Resolves the side of the popup from its placement */
@@ -42,6 +43,21 @@ export function resolveOpenMode(reason?: OpenChangeReason): OpenMode {
     if (reason === "hover" || reason === "safe-polygon") return "hover";
     if (reason === "focus") return "focus";
     return "manual";
+}
+
+/**
+ * Checks if the event occurred on the reference element, optionally requiring
+ * an exact match
+ */
+export function isEventOn(
+    reference: Maybe<Element>,
+    event: Event,
+    exact = false
+): boolean {
+    if (!(reference instanceof Element)) return false;
+
+    const path = event.composedPath();
+    return exact ? path[0] === reference : path.includes(reference);
 }
 
 function isDirectionalAnimation(

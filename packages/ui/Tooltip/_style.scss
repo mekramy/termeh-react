@@ -84,18 +84,10 @@
                 }
 
                 &.is-loading {
-                    @include termeh.loader(
-                        $line-height,
-                        $foreground,
-                        $decorator
-                    );
+                    @include termeh.loader(1em, $foreground, $decorator);
 
-                    > * {
-                        opacity: 0;
-                    }
-
-                    > .arrow {
-                        opacity: 1;
+                    > :not(.arrow) {
+                        opacity: 0 !important;
                     }
                 }
 
