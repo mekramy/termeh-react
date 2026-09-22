@@ -62,7 +62,11 @@ export default defineConfig({
         viteStaticCopy({
             targets: [
                 { src: "./eslint.extend.js", dest: "." },
-                { src: "./packages/style.scss", dest: "." },
+                {
+                    src: "./packages/style.scss",
+                    dest: ".",
+                    rename: { stripBase: 1 },
+                },
                 {
                     src: "./packages/ui/style.scss",
                     dest: ".",
