@@ -101,7 +101,7 @@
         "prettier": "^3.9.8",
         "prettier-plugin-jsdoc": "^1.8.1",
         "typescript": "^6.0.3",
-        "typescript-eslint": "^8.70.0",
+        "typescript-eslint": "^8.70.1",
         "vite": "^8.3.0",
         "vite-plugin-dts": "^5.1.1",
         "vite-plugin-static-copy": "^4.1.1",
