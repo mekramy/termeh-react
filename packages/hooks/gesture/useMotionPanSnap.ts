@@ -6,7 +6,7 @@ import {
     type ValueAnimationTransition,
 } from "motion/react";
 import { useCallback, useRef, useState } from "react";
-import { clamp, matches } from "../../utils";
+import { clamp, matches, type Prettify } from "../../utils";
 import {
     useComputed,
     useIsMounted,
@@ -84,7 +84,7 @@ interface SwipeContext {
 }
 
 /** Caches the resolved gesture context and its movement boundaries. */
-interface CachedSwipeContext extends SwipeContext {
+type CachedSwipeContext = Prettify<SwipeContext> & {
     /** Whether elastic movement is allowed for the current context. */
     elastic: boolean;
 
@@ -102,7 +102,7 @@ interface CachedSwipeContext extends SwipeContext {
 
     /** The maximum position reachable with elastic movement. */
     elasticMax: number;
-}
+};
 
 /**
  * Determines whether a gesture action is allowed.

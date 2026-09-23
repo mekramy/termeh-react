@@ -5,6 +5,7 @@ import {
     getRealElementSize,
     retainOrReplace,
     type ElementSize,
+    type Prettify,
 } from "../../utils";
 import { useStableCallback } from "../react";
 import {
@@ -56,7 +57,7 @@ export function useRealElementSize<T extends HTMLElement>(
         windowScroll = true,
         mediaQueries,
     }: Partial<UseRealElementSizeOptions> = {}
-): ElementSize & { update: () => void } {
+): Prettify<ElementSize> & { update: () => void } {
     const [empty] = useState(getEmptySize);
     const [rect, setRect] = useState(getEmptySize);
 

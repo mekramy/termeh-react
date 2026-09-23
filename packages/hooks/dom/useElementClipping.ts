@@ -5,6 +5,7 @@ import {
     getElementClipping,
     retainOrReplace,
     type Clipping,
+    type Prettify,
 } from "../../utils";
 import { useStableCallback } from "../react";
 import {
@@ -62,7 +63,7 @@ export function useElementClipping<T extends HTMLElement>(
         windowScroll = true,
         mediaQueries,
     }: Partial<UseElementClippingOptions> = {}
-): Clipping & { update: () => void } {
+): Prettify<Clipping> & { update: () => void } {
     const [empty] = useState(getEmptyClipping);
     const [clipping, setClipping] = useState(getEmptyClipping);
 

@@ -5,6 +5,7 @@ import {
     getElementBounding,
     retainOrReplace,
     type ElementRect,
+    type Prettify,
 } from "../../utils";
 import { useStableCallback } from "../react";
 import {
@@ -55,7 +56,7 @@ export function useElementBounding<T extends HTMLElement>(
         windowScroll = true,
         mediaQueries,
     }: Partial<UseElementBoundingOptions> = {}
-): ElementRect & { update: () => void } {
+): Prettify<ElementRect> & { update: () => void } {
     const [empty] = useState(getEmptyBounding);
     const [rect, setRect] = useState(getEmptyBounding);
 

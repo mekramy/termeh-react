@@ -22,6 +22,11 @@ export type RenderableProps<T> = ReactNode | T;
 /** Represents a type with the `children` property omitted. */
 export type WithoutChildren<T> = Omit<T, "children">;
 
+/** Prettifies a type by expanding its properties. */
+export type Prettify<T> = {
+    [K in keyof T]: T[K];
+} & {};
+
 /**
  * Represents a compound value composed from primitives:
  *
@@ -70,7 +75,7 @@ export interface ElementSize {
 }
 
 /** Represents the bounding rectangle of an element. */
-export interface ElementRect extends ElementSize {
+export type ElementRect = Prettify<ElementSize> & {
     x: number;
     y: number;
 
@@ -81,7 +86,7 @@ export interface ElementRect extends ElementSize {
 
     readonly centerX: number;
     readonly centerY: number;
-}
+};
 
 /** Metrics of the visual viewport. */
 export interface ViewportMetrics {

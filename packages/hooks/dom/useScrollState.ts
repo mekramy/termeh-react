@@ -1,5 +1,10 @@
 import { useCallback, useState } from "react";
-import { getScrollState, retainOrReplace, type ScrollState } from "../../utils";
+import {
+    getScrollState,
+    retainOrReplace,
+    type Prettify,
+    type ScrollState,
+} from "../../utils";
 import { useDebouncedCallback, useStableCallback, useWatch } from "../react";
 import {
     useLayoutWatch,
@@ -61,7 +66,7 @@ export function useScrollState<T extends HTMLElement>(
         observers = ["scroll", "resize", "mutation"],
         mediaQueries,
     }: Partial<ScrollStateOptions> = {}
-): ScrollState & { update: () => void } {
+): Prettify<ScrollState> & { update: () => void } {
     const [empty] = useState(getEmptyState);
     const [state, setState] = useState(getEmptyState);
 

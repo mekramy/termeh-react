@@ -1,4 +1,5 @@
 import type { ValueAnimationTransition, Variant } from "motion";
+import type { Prettify } from "../utils";
 import type { Modal } from "./modal";
 
 /** Modal clicked area: either the modal content or the dimmer. */
@@ -47,9 +48,9 @@ export type ActionHandler<T = unknown> = (
  * lifecycle to a corresponding animation variant. Individual entries are
  * optional for advanced customizations.
  */
-export type Animations = {
+export type Animations = Prettify<{
     [K in Exclude<Stage, "idle">]: Variant;
-} & {
+}> & {
     sheet?: ValueAnimationTransition;
 };
 

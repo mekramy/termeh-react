@@ -1,6 +1,6 @@
 import { useTransform } from "motion/react";
 import { useCallback, useRef, useState } from "react";
-import { type ViewportMetrics } from "../../utils";
+import { type Prettify, type ViewportMetrics } from "../../utils";
 import { useComputed } from "../react";
 import {
     useMotionPanSnap,
@@ -20,19 +20,21 @@ export type BottomSheetStage =
     "idle" | "dragging" | "opening" | "closing" | "expanding" | "restoring";
 
 /** Configuration options for the useBottomSheet hook. */
-export interface UseBottomSheetOptions extends Omit<
-    UseMotionPanSnapOptions,
-    | "axis"
-    | "points"
-    | "initial"
-    | "swipeGuard"
-    | "elasticGuard"
-    | "onMounted"
-    | "onUnMounted"
-    | "onSnap"
-    | "onCancel"
-    | "onFastSwipe"
-> {
+export type UseBottomSheetOptions = Prettify<
+    Omit<
+        UseMotionPanSnapOptions,
+        | "axis"
+        | "points"
+        | "initial"
+        | "swipeGuard"
+        | "elasticGuard"
+        | "onMounted"
+        | "onUnMounted"
+        | "onSnap"
+        | "onCancel"
+        | "onFastSwipe"
+    >
+> & {
     /**
      * Viewport metrics used to calculate the sheet's expanded, normal, and
      * closed positions.
@@ -103,7 +105,7 @@ export interface UseBottomSheetOptions extends Omit<
 
     /** Called when the sheet settles at its closed state. */
     onClose?: () => void;
-}
+};
 
 /**
  * Manages the state, position, and gesture interaction of a bottom sheet.
