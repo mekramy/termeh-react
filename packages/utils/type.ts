@@ -19,6 +19,9 @@ export type Destructor = void | (() => void);
 /** Represents a value that can either be a ReactNode or a specific type `T`. */
 export type RenderableProps<T> = ReactNode | T;
 
+/** Represents a type with the `children` property omitted. */
+export type WithoutChildren<T> = Omit<T, "children">;
+
 /**
  * Represents a compound value composed from primitives:
  *

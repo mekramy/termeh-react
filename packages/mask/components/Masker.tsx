@@ -1,4 +1,4 @@
-import { memo, useMemo } from "react";
+import { useMemo } from "react";
 import type { MaskOption } from "../types";
 import { mask } from "../utils/masker";
 
@@ -12,6 +12,7 @@ import { mask } from "../utils/masker";
 interface MaskerProps {
     /** The input string to be masked */
     value: string;
+
     /** Configuration object for the masking pattern */
     constructor: MaskOption;
 }
@@ -25,14 +26,11 @@ interface MaskerProps {
  *   value.
  * @returns {JSX.Element} A React fragment containing the masked string.
  */
-const Masker: React.FC<MaskerProps> = ({ value, constructor }) => {
+export function Masker({ value, constructor }: MaskerProps) {
     const masked = useMemo(
         () => mask(value, constructor),
         [value, constructor]
     );
 
     return masked;
-};
-
-Masker.displayName = "Masker";
-export default memo(Masker);
+}
